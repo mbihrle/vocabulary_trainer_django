@@ -55,6 +55,7 @@
         .buttons {
             display: flex;
             justify-content: space-between;
+            flex-wrap: wrap;
         }
         .buttons button, .buttons a {
             padding: 10px 20px;
@@ -64,6 +65,10 @@
             color: white;
             background-color: #007bff;
             border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .buttons .cancel-btn {
+            background-color: #dc3545;
         }
     </style>
 </head>
@@ -104,6 +109,8 @@
                     {% else %}
                         <button type="submit" name="next">Next</button>
                     {% endif %}
+                    <button type="submit" name="cancel" class="cancel-btn">Abbrechen</button>
+   
                 </div>
             </form>
         {% endif %}

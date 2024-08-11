@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
     django:
-        container_name: django
+        container_name: vocabulary_trainer_django
         build:
             context: ./voc_trainer
         command: python manage.py runserver 0.0.0.0:8000

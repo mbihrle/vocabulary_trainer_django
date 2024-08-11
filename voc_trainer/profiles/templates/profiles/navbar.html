@@ -16,7 +16,7 @@
           <a class="nav-link active" aria-current="page" href="{% url 'vocab:quiz' %}">Quiz</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="">Link</a>
+          <a class="nav-link" href="{% url 'vocab:random_direction' %}">Zufallsgenerator</a>
         </li>
       </ul>
       {% if user.is_authenticated %}

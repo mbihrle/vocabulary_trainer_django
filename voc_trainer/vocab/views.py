@@ -7,7 +7,19 @@ from django.views.generic.edit import FormView
 from .models import Card
 from .forms import AnswerForm
 from django.contrib.auth.mixins import LoginRequiredMixin
+import random
 
+# def random_direction(request):
+#     direction = random.choice(['links', 'rechts'])
+#     return render(request, 'vocab/direction.html', {'direction': direction})
+
+
+def random_direction(request):
+    direction = ''
+    print(request.method)
+    if request.method == 'POST':
+        direction = random.choice(['links', 'rechts'])
+    return render(request, 'vocab/direction.html', {'direction': direction})
 
 def home(request):
     return render(request, 'vocab/home.html')
@@ -32,7 +44,7 @@ def add_card(request):
 class QuizView(LoginRequiredMixin, FormView):
     template_name = 'vocab/quiz.html'
     form_class = AnswerForm
-    success_url = reverse_lazy('quiz')
+    success_url = reverse_lazy('vocab:quiz')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -52,7 +64,6 @@ class QuizView(LoginRequiredMixin, FormView):
         return context
 
     def get_random_card(self, exclude_ids):
-        # Retrieve a random card belonging to the current user that hasn't been asked yet
         return Card.objects.filter(user=self.request.user).exclude(id__in=exclude_ids).order_by('?').first()
 
     def form_valid(self, form):
@@ -66,6 +77,7 @@ class QuizView(LoginRequiredMixin, FormView):
         else:
             self.request.session['result'] = f"Incorrect! The correct answer is: {card.back}"
 
+        self.request.session['user_input'] = answer
         self.request.session['front'] = card.front
         self.request.session['back'] = card.back
 
@@ -80,8 +92,12 @@ class QuizView(LoginRequiredMixin, FormView):
             request.session.pop('result', None)
             request.session.pop('front', None)
             request.session.pop('back', None)
+            request.session.pop('user_input', None)
             return self.get(request, *args, **kwargs)
-        elif 'restart' in request.POST:
+        elif 'restart' in request.POST or 'cancel' in request.POST:
+            request.session.pop('result', None)
+            request.session.pop('front', None)
+            request.session.pop('back', None)
             request.session['asked_card_ids'] = []
             request.session['correct_answers'] = 0
             return self.get(request, *args, **kwargs)
