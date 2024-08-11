@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+    django:
+        container_name: django
+        build:
+            context: ./voc_trainer
+        command: python manage.py runserver 0.0.0.0:8000
+        volumes:
+            - ./voc_trainer:/usr/src/app
+        ports:
+            - 8001:8000

@@ -1,0 +1,6 @@
+{% extends './base.html' %}
+
+{% block content %}
+    <h1>Logout</h1>
+    <p>You have successfully logged out. <br/><a href="{% url 'profiles:login' %}">Login again?</a><br/><a href="{% url 'vocab:home' %}">Weiter</a></p>
+{% endblock %}
