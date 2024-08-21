@@ -72,14 +72,20 @@
     <div class="card shadow-sm">
         <div class="card-body">
             <h4 class="card-title">Contents:</h4>
+                <div class="form-check mb-2">
+                <input type="checkbox" class="form-check-input" id="select-all">
+                <label class="form-check-label" for="select-all">All</label>
+            </div>
             <form method="post" action="{% url 'vocab:move_cards' stack_id=stack.id %}">
                 {% csrf_token %}
                 <div class="scrollable-card-list">
                     <ul class="list-group">
                         {% for card in cards %}
                         <li class="list-group-item">
-                            <input type="checkbox" name="cards" value="{{ card.id }}">
+                            <div>
+                            <input class="card-checkbox me-2" type="checkbox" name="cards" value="{{ card.id }}">
                             <strong>{{ card.front }}</strong> - {{ card.back }}
+                            </div>
                             <div class="float-right">
                                 <a href="{% url 'vocab:edit_card' stack_id=stack.id pk=card.id %}" class="btn btn-warning btn-sm">Edit</a>
                                 <a href="{% url 'vocab:delete_card' stack_id=stack.id pk=card.id %}" class="btn btn-danger btn-sm">Delete</a>
@@ -102,6 +108,7 @@
     </div>
 </div>
 
+<script src="{% static 'vocab/js/stack_detail.js' %}"></script>
 
 {% endblock %}
 
