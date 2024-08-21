@@ -14,7 +14,8 @@ def register(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('vocab:add_card')
+            return redirect('vocab:home')
     else:
         form = UserCreationForm()
+    print("register RETURN")
     return render(request, 'profiles/register.html', {'form': form})

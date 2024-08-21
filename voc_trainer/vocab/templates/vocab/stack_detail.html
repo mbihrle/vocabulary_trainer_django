@@ -1,0 +1,111 @@
+{% extends 'profiles/base.html' %}
+{% load static %}
+
+{% block content %}
+<head>
+<link rel="stylesheet" type="text/css" href="{% static 'vocab/css/stack_detail.css'%}">
+</head>
+
+
+<div class="container mt-5">
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h1 class="card-title">{{ stack.name }}</h1>
+            <p class="card-text"><small>Created on {{ stack.created_at|date:"F j, Y, g:i a" }}</small></p>
+                <div class="mb-3">
+                    <a href="{% url 'vocab:home' %}" class="btn btn-secondary">Back to Stacks</a>
+                    <a href="{% url 'vocab:rename_stack' stack.id %}" class="btn btn-warning">Edit Stack</a>
+                    <a href="{% url 'vocab:delete_stack' stack.id %}" class="btn btn-danger">Delete Stack</a>
+                </div>
+        </div>
+    </div>
+
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h2 class="card-title">Add a New Card</h2>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    {{ form.front.label_tag }}
+                    <input
+                        type="text"
+                        name="front"
+                        class="form-control"
+                        maxlength="150"
+                        id="id_front"
+                        required
+                    />
+                    {% if form.front.errors %}
+                        <div class="text-danger">
+                            {% for error in form.front.errors %}
+                                {{ error }}<br>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="form-group mt-3">
+                    {{ form.back.label_tag }}
+                    <input
+                        type="text"
+                        name="back"
+                        class="form-control"
+                        maxlength="150"
+                        id="id_back"
+                        required
+                    />
+                    {% if form.back.errors %}
+                        <div class="text-danger">
+                            {% for error in form.back.errors %}
+                                {{ error }}<br>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <button type="submit" class="btn btn-primary my-3">Add Card</button>
+            </form>
+        </div>
+    </div>
+
+
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title">Contents:</h4>
+            <form method="post" action="{% url 'vocab:move_cards' stack_id=stack.id %}">
+                {% csrf_token %}
+                <div class="scrollable-card-list">
+                    <ul class="list-group">
+                        {% for card in cards %}
+                        <li class="list-group-item">
+                            <input type="checkbox" name="cards" value="{{ card.id }}">
+                            <strong>{{ card.front }}</strong> - {{ card.back }}
+                            <div class="float-right">
+                                <a href="{% url 'vocab:edit_card' stack_id=stack.id pk=card.id %}" class="btn btn-warning btn-sm">Edit</a>
+                                <a href="{% url 'vocab:delete_card' stack_id=stack.id pk=card.id %}" class="btn btn-danger btn-sm">Delete</a>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                 </div>
+                <div class="form-group mt-3">
+                    <label for="move_stack">Move to Stack:</label>
+                    <select name="new_stack" id="move_stack" class="form-control">
+                        {% for other_stack in other_stacks %}
+                        <option value="{{ other_stack.id }}">{{ other_stack.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">Move Selected Cards</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+
+
+
+

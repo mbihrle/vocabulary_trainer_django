@@ -1,0 +1,12 @@
+{% extends 'profiles/base.html' %}
+
+{% block content %}
+<h1>Create New Stack</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Create Stack</button>
+    </form>
+    <a href="{% url 'vocab:home' %}">Back to Stacks</a>
+
+{% endblock %}

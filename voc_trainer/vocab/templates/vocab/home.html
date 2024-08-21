@@ -1,6 +1,44 @@
 {% extends 'profiles/base.html' %}
 
+
 {% block content %}
-    <h1>Vocabulary Trainer -Home- </h1>
-    <a href="{% url 'vocab:add_card' %}">Vokabeln hinzufügen </a>
+<div class="container mt-5">
+    <h1>Your Stacks</h1>
+    <div class="row">
+        {% for stack in stacks %}
+        <div class="col-md-4">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">{{ stack.name }}</h5>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            Created on {{ stack.created_at|date:"F j, Y, g:i" }}
+                        </small>
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'vocab:stack_detail' stack.id %}" class="btn btn-primary btn-sm">View Stack</a>
+                        <a href="{% url 'vocab:quiz' stack.id %}" class="btn btn-success btn-sm">Start Quiz</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <a href="{% url 'vocab:create_stack' %}" class="btn btn-outline-primary mt-3">Create New Stack</a>
+</div>
 {% endblock %}
+
+
+    <h1>Your Stacks</h1>
+    <ul>
+        {% for stack in stacks %}
+        <li>
+            <a href="{% url 'vocab:stack_detail' stack.id %}">{{ stack.name }}</a>
+            <small>(Created on {{ stack.created_at|date:"F j, Y, g:i" }})</small>
+            <a href="{% url 'vocab:quiz' stack.id %}">Zum Quiz</a>
+        </li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'vocab:create_stack' %}">Create New Stack</a>
+
+    

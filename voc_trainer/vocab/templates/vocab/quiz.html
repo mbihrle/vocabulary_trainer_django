@@ -1,88 +1,22 @@
-{% extends './add_card.html' %}
+{% extends 'profiles/base.html' %}
+{% load static %}
 
 {% block content %}
-<!-- vocab/templates/vocab/quiz.html -->
-<!DOCTYPE html>
-<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vocabulary Quiz</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        .quiz-container {
-            max-width: 500px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        p {
-            font-size: 18px;
-            margin-bottom: 20px;
-        }
-        .result {
-            text-align: center;
-            font-size: 20px;
-            margin-bottom: 20px;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        .result.correct {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .result.incorrect {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 20px;
-            font-size: 18px;
-        }
-        .buttons {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-        }
-        .buttons button, .buttons a {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            text-decoration: none;
-            color: white;
-            background-color: #007bff;
-            border-radius: 5px;
-            margin-bottom: 10px;
-        }
-        .buttons .cancel-btn {
-            background-color: #dc3545;
-        }
-    </style>
+<link rel="stylesheet" type="text/css" href="{% static 'vocab/css/quiz.css'%}">
 </head>
+
 <body>
     <div class="quiz-container">
-        <h1>Vocabulary Quiz</h1>
+        <h1>Quiz for Stack: {{ stack.name }}</h1>
 
-        {% if quiz_finished %}
+        {% if quiz_finished and not request.session.result %}
             <p>The quiz is finished!</p>
             <p>You answered {{ correct_answers }} out of {{ total_cards }} cards correctly.</p>
             <form method="post">
                 {% csrf_token %}
                 <button type="submit" name="restart">Restart Quiz</button>
-                <a href="{% url 'vocab:add_card' %}">Add New Cards</a>
+                <a href="{% url 'vocab:home' %}">Home</a>
             </form>
         {% else %}
             <form method="post">
@@ -105,7 +39,7 @@
 
                 <div class="buttons">
                     {% if not request.session.result %}
-                        <button type="submit" name="submit">Submit</button>
+                        <button type="submit" name="check">Check</button>
                     {% else %}
                         <button type="submit" name="next">Next</button>
                     {% endif %}
