@@ -155,6 +155,15 @@ class MoveCardsView(View):
         return redirect('vocab:stack_detail', stack_id=current_stack.id)
 
 
+from django.utils import timezone
+from django.shortcuts import get_object_or_404, redirect
+from django.views.generic.edit import FormView
+from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin
+from .models import Stack, Card
+
+from django.utils import timezone
+
 class QuizView(LoginRequiredMixin, FormView):
     template_name = 'vocab/quiz.html'
     form_class = AnswerForm
@@ -163,8 +172,7 @@ class QuizView(LoginRequiredMixin, FormView):
     def dispatch(self, request, *args, **kwargs):
         self.stack = self.get_stack()
         if not self.stack:
-            # Redirect to a page where the user can select a stack
-            return redirect('vocab:home')  # Adjust the URL name as needed
+            return redirect('vocab:home')
         return super().dispatch(request, *args, **kwargs)
 
     def get_stack(self):
@@ -176,22 +184,25 @@ class QuizView(LoginRequiredMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        asked_card_ids = self.request.session.get(
-            f'asked_card_ids_{self.stack.id}', [])
+        asked_card_ids = self.request.session.get(f'asked_card_ids_{self.stack.id}', [])
         total_cards = self.stack.cards.count()
-        correct_answers = self.request.session.get(
-            f'correct_answers_{self.stack.id}', 0)
+        correct_answers = self.request.session.get(f'correct_answers_{self.stack.id}', 0)
 
         if len(asked_card_ids) == total_cards:
             context['quiz_finished'] = True
             context['total_cards'] = total_cards
             context['correct_answers'] = correct_answers
+            self.update_last_quiz_timestamp()  # Update stack's last quiz timestamp
         else:
             context['card'] = self.get_random_card(exclude_ids=asked_card_ids)
             context['submitted'] = self.request.POST.get('submit', False)
-            context['stack'] = self.stack  # Include the stack in the context
+            context['stack'] = self.stack
 
         return context
+
+    def update_last_quiz_timestamp(self):
+        self.stack.last_quiz_timestamp = timezone.now()
+        self.stack.save(update_fields=['last_quiz_timestamp'])
 
     def get_random_card(self, exclude_ids):
         return self.stack.cards.exclude(id__in=exclude_ids).order_by('?').first()
@@ -202,31 +213,44 @@ class QuizView(LoginRequiredMixin, FormView):
         card = get_object_or_404(Card, id=card_id, stack=self.stack)
 
         if card.back.lower() == answer.lower():
+            is_correct = True
             self.request.session['result'] = 'Correct!'
             self.request.session[f'correct_answers_{self.stack.id}'] = self.request.session.get(
                 f'correct_answers_{self.stack.id}', 0) + 1
         else:
+            is_correct = False
             self.request.session['result'] = f"Incorrect! The correct answer is: {card.back}"
+
+        self.save_quiz_result(card, is_correct)
 
         self.request.session['user_input'] = answer
         self.request.session['front'] = card.front
         self.request.session['back'] = card.back
 
-        asked_card_ids = self.request.session.get(
-            f'asked_card_ids_{self.stack.id}', [])
+        asked_card_ids = self.request.session.get(f'asked_card_ids_{self.stack.id}', [])
         asked_card_ids.append(card_id)
         self.request.session[f'asked_card_ids_{self.stack.id}'] = asked_card_ids
 
         return self.render_to_response(self.get_context_data(form=form))
 
+    def save_quiz_result(self, card, is_correct):
+        # Update correct/incorrect counts and quiz results
+        if is_correct:
+            card.correct_answers += 1
+            card.quiz_results += '1'
+        else:
+            card.incorrect_answers += 1
+            card.quiz_results += '0'
+
+        # Update the last_quiz_timestamp for the card
+        card.last_quiz_timestamp = timezone.now()
+        card.save(update_fields=['correct_answers', 'incorrect_answers', 'quiz_results', 'last_quiz_timestamp'])
+
     def post(self, request, *args, **kwargs):
-        print('here I am')
         if 'next' in request.POST:
-            print('next')
             self.clear_session_data()
             return self.get(request, *args, **kwargs)
         elif 'restart' in request.POST or 'cancel' in request.POST:
-            print('restart or cancel')
             self.clear_session_data()
             self.request.session[f'asked_card_ids_{self.stack.id}'] = []
             self.request.session[f'correct_answers_{self.stack.id}'] = 0
@@ -237,3 +261,5 @@ class QuizView(LoginRequiredMixin, FormView):
         session_keys = ['result', 'front', 'back', 'user_input']
         for key in session_keys:
             self.request.session.pop(key, None)
+
+
