@@ -13,6 +13,9 @@
             <h1 class="card-title">{{ stack.name }}</h1>
             <p class="card-text"><small>Created on {{ stack.created_at|date:"F j, Y, g:i a" }}</small></p>
                 <div class="mb-3">
+                    <p class="card-text">
+                    <strong>Total Cards: {{ stack.cards.count }}</strong>
+                    </p>
                     <a href="{% url 'vocab:home' %}" class="btn btn-secondary">Back to Stacks</a>
                     <a href="{% url 'vocab:rename_stack' stack.id %}" class="btn btn-warning">Edit Stack</a>
                     <a href="{% url 'vocab:delete_stack' stack.id %}" class="btn btn-danger">Delete Stack</a>
@@ -83,8 +86,16 @@
                         {% for card in cards %}
                         <li class="list-group-item">
                             <div>
-                            <input class="card-checkbox me-2" type="checkbox" name="cards" value="{{ card.id }}">
-                            <strong>{{ card.front }}</strong> - {{ card.back }}
+                                <input class="card-checkbox me-2" type="checkbox" name="cards" value="{{ card.id }}">
+                                <strong>{{ card.front }}</strong> - {{ card.back }}
+                                <br/>
+                                <small>
+                                   Quote: ({{ card.correct_answers }}/{{ card.correct_answers|add:card.incorrect_answers }})
+                                    |
+                                    History: {{ card.quiz_results|slice:"-6:" }}
+                                    |
+                                    Last Quiz: {{ card.last_quiz_timestamp|date:"F j, Y" }}
+                                </small>
                             </div>
                             <div class="float-right">
                                 <a href="{% url 'vocab:edit_card' stack_id=stack.id pk=card.id %}" class="btn btn-warning btn-sm">Edit</a>

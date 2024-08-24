@@ -18,6 +18,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <a href="{% url 'vocab:stack_detail' stack.id %}" class="btn btn-primary btn-sm">View Stack</a>
                         <a href="{% url 'vocab:quiz' stack.id %}" class="btn btn-success btn-sm">Start Quiz</a>
+                        <a href="{% url 'vocab:quiz' stack.id %}?inverse=1" class="btn btn-warning btn-sm">Start Quiz Inverse</a>
                     </div>
                 </div>
             </div>

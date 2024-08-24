@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
 {% extends 'profiles/base.html' %}
 {% load static %}
 
@@ -19,34 +30,68 @@
                 <a href="{% url 'vocab:home' %}">Home</a>
             </form>
         {% else %}
-            <form method="post">
-                {% csrf_token %}
+            {% if request.session.inverse_quiz %}
+                <form method="post">
+                    {% csrf_token %}
 
-                {% if request.session.front and request.session.back %}
-                    <p>Front of Card: <strong>{{ request.session.front }}</strong></p>
-                    <p>Back of Card: <strong>{{ request.session.back }}</strong></p>
-                    <p>Your Input: <strong>{{ request.session.user_input }}</strong></p>
-                    {% if request.session.result %}
-                        <div class="result {% if 'Correct!' in request.session.result %}correct{% else %}incorrect{% endif %}">
-                            {{ request.session.result }}
-                        </div>
-                    {% endif %}
-                {% else %}
-                    <p>Translate: <strong>{{ card.front }}</strong></p>
-                    <input type="hidden" name="card_id" value="{{ card.id }}">
-                    {{ form.answer }}
-                {% endif %}
-
-                <div class="buttons">
-                    {% if not request.session.result %}
-                        <button type="submit" name="check">Check</button>
+                    {% if request.session.front and request.session.back %}
+                        <p>Back of Card: <strong>{{ request.session.back }}</strong></p>
+                        <p>Front of Card: <strong>{{ request.session.front }}</strong></p>
+                        <p>Your Input: <strong>{{ request.session.user_input }}</strong></p>
+                        {% if request.session.result %}
+                            <div class="result {% if 'Correct!' in request.session.result %}correct{% else %}incorrect{% endif %}">
+                                {{ request.session.result }}
+                            </div>
+                        {% endif %}
                     {% else %}
-                        <button type="submit" name="next">Next</button>
+                        <p><strong>{{ card.back }}</strong></p>
+                        <input type="hidden" name="card_id" value="{{ card.id }}">
+                        {{ form.answer }}
                     {% endif %}
-                    <button type="submit" name="cancel" class="cancel-btn">Abbrechen</button>
-   
-                </div>
-            </form>
+
+                    <div class="buttons">
+                        {% if not request.session.result %}
+                            <button type="submit" name="check">Check</button>
+                        {% else %}
+                            <button type="submit" name="next">Next</button>
+                        {% endif %}
+                        <button type="submit" name="cancel" class="cancel-btn">Abbrechen</button>
+    
+                    </div>
+                </form>
+            {% else %}
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if request.session.front and request.session.back %}
+                        <p>Front of Card: <strong>{{ request.session.front }}</strong></p>
+                        <p>Back of Card: <strong>{{ request.session.back }}</strong></p>
+                        <p>Your Input: <strong>{{ request.session.user_input }}</strong></p>
+                        {% if request.session.result %}
+                            <div class="result {% if 'Correct!' in request.session.result %}correct{% else %}incorrect{% endif %}">
+                                {{ request.session.result }}
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <p>Translate: <strong>{{ card.front }}</strong></p>
+                        <input type="hidden" name="card_id" value="{{ card.id }}">
+                        {{ form.answer }}
+                    {% endif %}
+
+                    <div class="buttons">
+                        {% if not request.session.result %}
+                            <button type="submit" name="check">Check</button>
+                        {% else %}
+                            <button type="submit" name="next">Next</button>
+                        {% endif %}
+                        <button type="submit" name="cancel" class="cancel-btn">Abbrechen</button>
+    
+                    </div>
+                </form>
+            {% endif %}
+
+
+
         {% endif %}
     </div>
 </body>
@@ -54,4 +99,3 @@
 
 
 {% endblock %}
-   
