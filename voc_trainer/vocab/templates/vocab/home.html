@@ -17,8 +17,13 @@
                     </p>
                     <div class="d-flex justify-content-between align-items-center">
                         <a href="{% url 'vocab:stack_detail' stack.id %}" class="btn btn-primary btn-sm">View Stack</a>
-                        <a href="{% url 'vocab:quiz' stack.id %}" class="btn btn-success btn-sm">Start Quiz</a>
-                        <a href="{% url 'vocab:quiz' stack.id %}?inverse=1" class="btn btn-warning btn-sm">Start Quiz Inverse</a>
+                        <a href="{% url 'vocab:start_quiz' stack.id %}" class="btn btn-success btn-sm">Start Quiz</a>
+                        <a href="{% url 'vocab:start_quiz' stack.id %}?inverse_quiz=true" class="btn btn-warning btn-sm">Start Quiz Inverse</a>
+                        {% comment %} <form method="post" action="{% url 'vocab:quiz' stack_id=stack.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="inverse_quiz" value="true">
+                            <button type="submit" class="btn btn-secondary">Start Quiz Inverse</button>
+                        </form> {% endcomment %}
                     </div>
                 </div>
             </div>

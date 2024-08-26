@@ -33,8 +33,23 @@ def home(request):
     stacks = Stack.objects.filter(user=request.user)
     return render(request, 'vocab/home.html', {'stacks': stacks})
 
-# @login_required
 
+class StartQuizView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        stack_id = kwargs.get('stack_id')
+        stack = get_object_or_404(Stack, id=stack_id, user=request.user)
+
+        # Check for 'inverse_quiz' in the query parameters
+        if 'inverse_quiz' in request.GET:
+            self.request.session['inverse_quiz'] = True
+        else:
+            self.request.session['inverse_quiz'] = False
+
+        # Initialize other session variables as needed
+        self.request.session['quiz_status'] = 'question'
+
+        # Redirect to the quiz page
+        return redirect('vocab:quiz', stack_id=stack.id)
 
 def test(request):
     return render(request, 'vocab/test.html')
@@ -159,6 +174,26 @@ class MoveCardsView(View):
         return redirect('vocab:stack_detail', stack_id=current_stack.id)
 
 
+
+class StartQuizView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        stack_id = kwargs.get('stack_id')
+        stack = get_object_or_404(Stack, id=stack_id, user=request.user)
+
+        # Check for 'inverse_quiz' in the query parameters
+        if 'inverse_quiz' in request.GET:
+            print('inverse get')
+            self.request.session['inverse_quiz'] = True
+        else:
+            self.request.session['inverse_quiz'] = False
+
+        # Initialize other session variables as needed
+        self.request.session['quiz_status'] = 'start'
+
+        # Redirect to the quiz page
+        return redirect('vocab:quiz', stack_id=stack.id)
+
+
 class QuizView(LoginRequiredMixin, FormView):
     template_name = 'vocab/quiz.html'
     form_class = AnswerForm
@@ -168,11 +203,7 @@ class QuizView(LoginRequiredMixin, FormView):
         self.stack = self.get_stack()
         if not self.stack:
             return redirect('vocab:home')
-
-        # Check if inverse quiz is requested via query parameter
-        self.inverse_quiz = request.GET.get('inverse') == '1'
-        request.session['inverse_quiz'] = self.inverse_quiz
-
+        request.session['quiz_status'] = 'question'
         return super().dispatch(request, *args, **kwargs)
 
     def get_stack(self):
@@ -184,27 +215,22 @@ class QuizView(LoginRequiredMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        asked_card_ids = self.request.session.get(
-            f'asked_card_ids_{self.stack.id}', [])
+        asked_card_ids = self.request.session.get(f'asked_card_ids_{self.stack.id}', [])
         total_cards = self.stack.cards.count()
-        correct_answers = self.request.session.get(
-            f'correct_answers_{self.stack.id}', 0)
-
+        correct_answers = self.request.session.get(f'correct_answers_{self.stack.id}', 0)
+        
         if len(asked_card_ids) == total_cards:
             context['quiz_finished'] = True
             context['total_cards'] = total_cards
             context['correct_answers'] = correct_answers
-            self.update_last_quiz_timestamp()  # Update stack's last quiz timestamp
         else:
-            context['card'] = self.get_random_card(exclude_ids=asked_card_ids)
-            context['submitted'] = self.request.POST.get('submit', False)
-            context['stack'] = self.stack
+            card = self.get_random_card(exclude_ids=asked_card_ids)
+            context['card'] = card
+            context['card_question'] = card.back if self.request.session.get('inverse_quiz') else card.front
+            context['quiz_status'] = self.request.session.get('quiz_status', 'question')
+        context['stack'] = self.stack
 
         return context
-
-    def update_last_quiz_timestamp(self):
-        self.stack.last_quiz_timestamp = timezone.now()
-        self.stack.save(update_fields=['last_quiz_timestamp'])
 
     def get_random_card(self, exclude_ids):
         return self.stack.cards.exclude(id__in=exclude_ids).order_by('?').first()
@@ -214,58 +240,59 @@ class QuizView(LoginRequiredMixin, FormView):
         answer = form.cleaned_data.get('answer')
         card = get_object_or_404(Card, id=card_id, stack=self.stack)
 
-        if self.request.session['inverse_quiz']:
-            card_solution = card.front.lower()
-        else:
-            card_solution = card.back.lower()
+        # Determine the correct answer depending on quiz mode (normal or inverse)
+        correct_answer = card.front if self.request.session.get('inverse_quiz') else card.back
 
-        if card_solution == answer.lower():
-            is_correct = True
+        if correct_answer.lower() == answer.lower():
             self.request.session['result'] = 'Correct!'
             self.request.session[f'correct_answers_{self.stack.id}'] = self.request.session.get(f'correct_answers_{self.stack.id}', 0) + 1
+            card.correct_answers += 1
         else:
-            is_correct = False
-            self.request.session['result'] = f"Incorrect! The correct answer is: {card.back}"
+            self.request.session['result'] = f"{correct_answer}"
+            card.incorrect_answers += 1
 
-        self.save_quiz_result(card, is_correct)
+        # Record the quiz result
+        card.quiz_results += '1' if correct_answer.lower() == answer.lower() else '0'
+        card.last_quiz_timestamp = timezone.now()
+        card.save()
 
+        self.request.session['quiz_status'] = 'answer'
         self.request.session['user_input'] = answer
-        self.request.session['front'] = card.front
-        self.request.session['back'] = card.back
+        self.request.session['question'] = card.back if self.request.session.get('inverse_quiz') else card.front
+        self.request.session['solution'] = correct_answer
 
-        asked_card_ids = self.request.session.get(
-            f'asked_card_ids_{self.stack.id}', [])
+        asked_card_ids = self.request.session.get(f'asked_card_ids_{self.stack.id}', [])
         asked_card_ids.append(card_id)
         self.request.session[f'asked_card_ids_{self.stack.id}'] = asked_card_ids
 
         return self.render_to_response(self.get_context_data(form=form))
 
-    def save_quiz_result(self, card, is_correct):
-        # Update correct/incorrect counts and quiz results
-        if is_correct:
-            card.correct_answers += 1
-            card.quiz_results += '1'
-        else:
-            card.incorrect_answers += 1
-            card.quiz_results += '0'
-
-        # Update the last_quiz_timestamp for the card
-        card.last_quiz_timestamp = timezone.now()
-        card.save(update_fields=[
-                  'correct_answers', 'incorrect_answers', 'quiz_results', 'last_quiz_timestamp'])
+        # Redirect to the quiz page
+        return redirect('vocab:quiz', stack_id=stack.id)
 
     def post(self, request, *args, **kwargs):
-        if 'next' in request.POST:
+        if 'check' in request.POST:
+            self.request.session['quiz_status'] = 'answer'
+        elif 'next' in request.POST:
             self.clear_session_data()
+            self.request.session['quiz_status'] = 'question'
+            return self.get(request, *args, **kwargs)
+        elif 'cancel' in request.POST or 'cancel' in request.POST:
+            self.clear_session_data()
+            self.request.session[f'asked_card_ids_{self.stack.id}'] = []
+            self.request.session[f'correct_answers_{self.stack.id}'] = 0
+            self.request.session['quiz_status'] = 'question'
+            return redirect('vocab:home')
             return self.get(request, *args, **kwargs)
         elif 'restart' in request.POST or 'cancel' in request.POST:
             self.clear_session_data()
             self.request.session[f'asked_card_ids_{self.stack.id}'] = []
             self.request.session[f'correct_answers_{self.stack.id}'] = 0
+            self.request.session['quiz_status'] = 'question'
             return self.get(request, *args, **kwargs)
         return super().post(request, *args, **kwargs)
 
     def clear_session_data(self):
-        session_keys = ['result', 'front', 'back', 'user_input']
+        session_keys = ['result', 'question', 'solution', 'user_input', 'quiz_status']
         for key in session_keys:
             self.request.session.pop(key, None)
