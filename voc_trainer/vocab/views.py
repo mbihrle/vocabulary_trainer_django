@@ -27,11 +27,23 @@ def random_direction(request):
         direction = random.choice(['links', 'rechts'])
     return render(request, 'vocab/direction.html', {'direction': direction})
 
-
 @login_required
 def home(request):
-    stacks = Stack.objects.filter(user=request.user)
-    return render(request, 'vocab/home.html', {'stacks': stacks})
+    query = request.GET.get('q')
+    if query:
+        stacks = Stack.objects.filter(name__icontains=query, user=request.user)
+    else:
+        stacks = Stack.objects.filter(user=request.user)
+
+    context = {
+        'stacks': stacks,
+    }
+    return render(request, 'vocab/home.html', context)
+
+# @login_required
+# def home(request):
+#     stacks = Stack.objects.filter(user=request.user)
+#     return render(request, 'vocab/home.html', {'stacks': stacks})
 
 
 class StartQuizView(LoginRequiredMixin, View):
