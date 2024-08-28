@@ -1,5 +1,5 @@
 
-from .models import Stack, Card
+from .models import Stack, Card, Tag, StackTag
 from django.views.generic.edit import FormView
 from django.utils import timezone
 from .forms import AnswerForm
@@ -11,8 +11,10 @@ from django.urls import reverse_lazy
 from django.views.generic.edit import FormView, UpdateView, DeleteView
 from django.views import View
 from .models import Card, Stack
-from .forms import AnswerForm, CardForm, StackForm
+from .forms import AnswerForm, CardForm, StackForm, TagForm
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
+from django.urls import reverse
 import random
 
 # def random_direction(request):
@@ -26,6 +28,7 @@ def random_direction(request):
     if request.method == 'POST':
         direction = random.choice(['links', 'rechts'])
     return render(request, 'vocab/direction.html', {'direction': direction})
+
 
 @login_required
 def home(request):
@@ -63,6 +66,7 @@ class StartQuizView(LoginRequiredMixin, View):
         # Redirect to the quiz page
         return redirect('vocab:quiz', stack_id=stack.id)
 
+
 def test(request):
     return render(request, 'vocab/test.html')
 
@@ -72,6 +76,8 @@ def stack_detail(request, stack_id):
     stack = get_object_or_404(Stack, id=stack_id, user=request.user)
     cards = stack.cards.all()
     other_stacks = Stack.objects.exclude(id=stack_id)
+    # tags = stack.tags.all()  # Get all tags associated with this stack
+    stack_tags = StackTag.objects.filter(stack=stack)  # Get the StackTag relationships
 
     if request.method == 'POST':
         form = CardForm(request.POST)
@@ -84,8 +90,31 @@ def stack_detail(request, stack_id):
     else:
         form = CardForm()
 
-    return render(request, 'vocab/stack_detail.html', {'stack': stack, 'cards': cards, 'form': form, 'other_stacks': other_stacks})
+    context = {
+        'stack': stack, 
+        'cards': cards, 
+        'form': form, 
+        'other_stacks': other_stacks,
+        'stack_tags': stack_tags
+    }
 
+    # return render(request, 'vocab/stack_detail.html', {'stack': stack, 'cards': cards, 'form': form, 'other_stacks': other_stacks})
+    return render(request, 'vocab/stack_detail.html', context)
+
+
+# @login_required
+# def create_stack(request):
+#     if request.method == 'POST':
+#         form = StackForm(request.POST)
+#         if form.is_valid():
+#             stack = form.save(commit=False)
+#             stack.user = request.user
+#             stack.save()
+#             return redirect('vocab:home')
+#     else:
+#         form = StackForm()
+
+#     return render(request, 'vocab/create_stack.html', {'form': form})
 
 @login_required
 def create_stack(request):
@@ -95,23 +124,100 @@ def create_stack(request):
             stack = form.save(commit=False)
             stack.user = request.user
             stack.save()
+            form.save_m2m()  # Save the tags
             return redirect('vocab:home')
     else:
         form = StackForm()
-
     return render(request, 'vocab/create_stack.html', {'form': form})
 
+# class RenameStackView(UpdateView):
+#     model = Stack
+#     form_class = StackForm
+#     template_name = 'vocab/rename_stack.html'
 
-class RenameStackView(UpdateView):
-    model = Stack
-    form_class = StackForm
-    template_name = 'vocab/rename_stack.html'
+#     def get_success_url(self):
+#         return reverse_lazy('vocab:stack_detail', kwargs={'stack_id': self.object.id})
 
-    def get_success_url(self):
-        return reverse_lazy('vocab:stack_detail', kwargs={'stack_id': self.object.id})
+#     def get_queryset(self):
+#         return Stack.objects.filter(user=self.request.user)
 
-    def get_queryset(self):
-        return Stack.objects.filter(user=self.request.user)
+
+@login_required
+
+def edit_stack(request, stack_id):
+    stack = get_object_or_404(Stack, id=stack_id)
+    assigned_tags = StackTag.objects.filter(stack=stack)
+    unassigned_tags = Tag.objects.exclude(stacktag__in=assigned_tags)
+
+    if request.method == 'POST':
+        if 'add_existing_tag' in request.POST:
+            tag_id = request.POST.get('existing_tag')
+            if tag_id:
+                tag = get_object_or_404(Tag, id=tag_id)
+                StackTag.objects.create(stack=stack, tag=tag)
+                messages.success(request, f'Tag "{tag.name}" added to the stack.')
+
+        elif 'new_tag' in request.POST:
+            tag_form = TagForm(request.POST)
+            if tag_form.is_valid():
+                new_tag = tag_form.save(commit=False)
+                new_tag.user = request.user
+                new_tag.save()
+                StackTag.objects.create(stack=stack, tag=new_tag)
+                messages.success(request, f'New tag "{new_tag.name}" created and added to the stack.')
+
+        elif 'save_changes' in request.POST:
+            form = StackForm(request.POST, instance=stack)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Stack updated successfully.')
+
+        return redirect('vocab:edit_stack', stack_id=stack.id)
+
+    else:
+        form = StackForm(instance=stack)
+        tag_form = TagForm()
+
+    context = {
+        'stack': stack,
+        'form': form,
+        'tag_form': tag_form,
+        'assigned_tags': assigned_tags,
+        'unassigned_tags': unassigned_tags,
+    }
+
+    return render(request, 'vocab/edit_stack.html', context)
+
+   
+# def edit_stack(request, stack_id):
+#     stack = get_object_or_404(Stack, id=stack_id)
+
+#     # Initialize forms
+#     stack_form = StackForm(instance=stack)
+#     tag_form = TagForm()
+
+#     if request.method == 'POST':
+#         if 'save_stack' in request.POST:  # Handle stack form submission
+#             stack_form = StackForm(request.POST, instance=stack)
+#             if stack_form.is_valid():
+#                 stack_form.save()
+#                 return redirect('vocab:stack_detail', stack_id=stack.id)
+
+#         elif 'add_tag' in request.POST:  # Handle tag form submission
+#             tag_form = TagForm(request.POST)
+#             if tag_form.is_valid():
+#                 new_tag = tag_form.save()
+#                 stack.tags.add(new_tag)  # Add the new tag to the stack
+#                 return redirect('vocab:edit_stack', stack_id=stack.id)
+
+#     context = {
+#         'form': stack_form,
+#         'tag_form': tag_form,
+#         'stack_id': stack_id,
+#         'stack': stack,
+#     }
+#     return render(request, 'vocab/edit_stack.html', context)
+
 
 
 class DeleteStackView(LoginRequiredMixin, DeleteView):
@@ -186,7 +292,6 @@ class MoveCardsView(View):
         return redirect('vocab:stack_detail', stack_id=current_stack.id)
 
 
-
 class StartQuizView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         stack_id = kwargs.get('stack_id')
@@ -227,10 +332,12 @@ class QuizView(LoginRequiredMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        asked_card_ids = self.request.session.get(f'asked_card_ids_{self.stack.id}', [])
+        asked_card_ids = self.request.session.get(
+            f'asked_card_ids_{self.stack.id}', [])
         total_cards = self.stack.cards.count()
-        correct_answers = self.request.session.get(f'correct_answers_{self.stack.id}', 0)
-        
+        correct_answers = self.request.session.get(
+            f'correct_answers_{self.stack.id}', 0)
+
         if len(asked_card_ids) == total_cards:
             context['quiz_finished'] = True
             context['total_cards'] = total_cards
@@ -238,8 +345,10 @@ class QuizView(LoginRequiredMixin, FormView):
         else:
             card = self.get_random_card(exclude_ids=asked_card_ids)
             context['card'] = card
-            context['card_question'] = card.back if self.request.session.get('inverse_quiz') else card.front
-            context['quiz_status'] = self.request.session.get('quiz_status', 'question')
+            context['card_question'] = card.back if self.request.session.get(
+                'inverse_quiz') else card.front
+            context['quiz_status'] = self.request.session.get(
+                'quiz_status', 'question')
         context['stack'] = self.stack
 
         return context
@@ -253,11 +362,13 @@ class QuizView(LoginRequiredMixin, FormView):
         card = get_object_or_404(Card, id=card_id, stack=self.stack)
 
         # Determine the correct answer depending on quiz mode (normal or inverse)
-        correct_answer = card.front if self.request.session.get('inverse_quiz') else card.back
+        correct_answer = card.front if self.request.session.get(
+            'inverse_quiz') else card.back
 
         if correct_answer.lower() == answer.lower():
             self.request.session['result'] = 'Correct!'
-            self.request.session[f'correct_answers_{self.stack.id}'] = self.request.session.get(f'correct_answers_{self.stack.id}', 0) + 1
+            self.request.session[f'correct_answers_{self.stack.id}'] = self.request.session.get(
+                f'correct_answers_{self.stack.id}', 0) + 1
             card.correct_answers += 1
         else:
             self.request.session['result'] = f"{correct_answer}"
@@ -273,7 +384,8 @@ class QuizView(LoginRequiredMixin, FormView):
         self.request.session['question'] = card.back if self.request.session.get('inverse_quiz') else card.front
         self.request.session['solution'] = correct_answer
 
-        asked_card_ids = self.request.session.get(f'asked_card_ids_{self.stack.id}', [])
+        asked_card_ids = self.request.session.get(
+            f'asked_card_ids_{self.stack.id}', [])
         asked_card_ids.append(card_id)
         self.request.session[f'asked_card_ids_{self.stack.id}'] = asked_card_ids
 
@@ -305,6 +417,38 @@ class QuizView(LoginRequiredMixin, FormView):
         return super().post(request, *args, **kwargs)
 
     def clear_session_data(self):
-        session_keys = ['result', 'question', 'solution', 'user_input', 'quiz_status']
+        session_keys = ['result', 'question',
+                        'solution', 'user_input', 'quiz_status']
         for key in session_keys:
             self.request.session.pop(key, None)
+
+
+
+def add_tag_to_stack(request, stack_id):
+    stack = get_object_or_404(Stack, id=stack_id)
+
+    if request.method == 'POST':
+        tag_name = request.POST.get('tag_name')
+        if tag_name:
+            tag, created = Tag.objects.get_or_create(name=tag_name)
+            StackTag.objects.get_or_create(stack=stack, tag=tag, added_by=request.user)
+
+    return redirect('vocab:edit_stack', stack_id=stack.id)
+    # return redirect('vocab:stack_detail', stack_id=stack.id)
+
+
+def stacks_by_tag(request, tag_name):
+    tag = get_object_or_404(Tag, name=tag_name)
+    stacks = Stack.objects.filter(stacktag__tag=tag)
+
+    return render(request, 'vocab/stacks_by_tag.html', {'stacks': stacks, 'tag': tag})
+
+
+def remove_stack_tag(request, stack_tag_id):
+    stack_tag = get_object_or_404(StackTag, id=stack_tag_id)
+    stack_tag.delete()
+    messages.success(request, 'Tag removed from stack successfully!')
+    return redirect(reverse('vocab:edit_stack', args=[stack_tag.stack.id]))
+
+
+

@@ -3,14 +3,35 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 
 
-class Stack(models.Model):
-    name = models.CharField(max_length=255)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)  # Timestamp field
-    last_quiz_timestamp = models.DateTimeField(null=True, blank=True)  # Add this field
+class Tag(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tags')
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
+
+class Stack(models.Model):
+    name = models.CharField(max_length=255)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True) 
+    last_quiz_timestamp = models.DateTimeField(null=True, blank=True)  # 
+
+    def __str__(self):
+        return self.name
+
+
+class StackTag(models.Model):
+    stack = models.ForeignKey(Stack, on_delete=models.CASCADE)
+    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+    added_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('stack', 'tag')
+
+    def __str__(self):
+        return f"{self.stack.name} - {self.tag.name}"
 
 
 class Card(models.Model):
@@ -29,23 +50,4 @@ class Card(models.Model):
     def __str__(self):
         return f"{self.front} - {self.back}"
 
-    # def record_quiz_result(self, is_correct):
-    #     """Record the result of a quiz attempt."""
-    #     if is_correct:
-    #         self.correct_answers += 1
-    #         result = '1'  # Correct answer
-    #     else:
-    #         self.incorrect_answers += 1
-    #         result = '0'  # Incorrect answer
 
-    #     # Update the quiz results text field
-    #     if self.quiz_results:
-    #         self.quiz_results += result
-    #     else:
-    #         self.quiz_results = result
-
-    #     # Update the timestamp of the last quiz attempt
-    #     self.last_quiz_timestamp = timezone.now()
-
-    #     # Save the changes to the model
-    #     self.save()

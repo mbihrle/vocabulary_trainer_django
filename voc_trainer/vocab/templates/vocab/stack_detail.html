@@ -11,13 +11,23 @@
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <h1 class="card-title">{{ stack.name }}</h1>
+            <!-- Display the tags -->
+            <p>Tags: 
+                {% for tag in stack_tags %}
+                    <span class="badge bg-info text-dark">{{ tag.tag.name }}</span>
+                {% empty %}
+                    <span>No tags assigned</span>
+                {% endfor %}
+            </p>
+
+
             <p class="card-text"><small>Created on {{ stack.created_at|date:"F j, Y, g:i a" }}</small></p>
                 <div class="mb-3">
                     <p class="card-text">
                     <strong>Total Cards: {{ stack.cards.count }}</strong>
                     </p>
                     <a href="{% url 'vocab:home' %}" class="btn btn-secondary">Back to Stacks</a>
-                    <a href="{% url 'vocab:rename_stack' stack.id %}" class="btn btn-warning">Edit Stack</a>
+                    <a href="{% url 'vocab:edit_stack' stack.id %}" class="btn btn-warning">Edit Stack</a>
                     <a href="{% url 'vocab:delete_stack' stack.id %}" class="btn btn-danger">Delete Stack</a>
                 </div>
         </div>

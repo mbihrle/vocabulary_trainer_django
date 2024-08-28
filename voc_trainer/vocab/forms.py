@@ -1,23 +1,44 @@
 from django import forms
-from .models import Card, Stack
+from .models import Card, Stack, Tag, StackTag
 
 class CardForm(forms.ModelForm):
     class Meta:
         model = Card
         fields = ['front', 'back']
-        # widgets = {
-        #     'front': forms.TextInput(attrs={'class': 'form-control'}),
-        #     'back': forms.TextInput(attrs={'class': 'form-control'}),
-        # }
+
+
+# class StackForm(forms.ModelForm):
+#     tags = forms.ModelMultipleChoiceField(queryset=Tag.objects.all(), required=False, widget=forms.CheckboxSelectMultiple)
+
+#     class Meta:
+#         model = Stack
+#         fields = ['name', 'tags']
+
+#     def save(self, commit=True):
+#         stack = super().save(commit=False)
+#         if commit:
+#             stack.save()
+#             self.save_m2m()  # Save tags
+#         return stack
 
 class StackForm(forms.ModelForm):
+    tags = forms.ModelMultipleChoiceField(
+        queryset=Tag.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False
+    )
+
     class Meta:
         model = Stack
-        fields = ['name']
+        fields = ['name', 'tags']
 
-# class AnswerForm(forms.Form):
-#     card_id = forms.IntegerField(widget=forms.HiddenInput)
-#     answer = forms.CharField(max_length=255, widget=forms.TextInput(attrs={'placeholder': 'Enter translation'}))
+class TagForm(forms.ModelForm):
+    class Meta:
+        model = Tag
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter tag name'}),
+        }
 
 class AnswerForm(forms.Form):
     answer = forms.CharField(
