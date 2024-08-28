@@ -166,6 +166,7 @@ def edit_stack(request, stack_id):
                 messages.success(request, f'New tag "{new_tag.name}" created and added to the stack.')
 
         elif 'save_changes' in request.POST:
+            print('save_changes')
             form = StackForm(request.POST, instance=stack)
             if form.is_valid():
                 form.save()
