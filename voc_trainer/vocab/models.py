@@ -37,6 +37,8 @@ class StackTag(models.Model):
 class Card(models.Model):
     front = models.CharField(max_length=1000)
     back = models.CharField(max_length=1000)
+    front_desc = models.CharField(max_length=1000, blank=True, null=True)
+    back_desc = models.CharField(max_length=1000, blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     stack = models.ForeignKey(
         Stack, on_delete=models.CASCADE, related_name='cards')

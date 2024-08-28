@@ -4,22 +4,8 @@ from .models import Card, Stack, Tag, StackTag
 class CardForm(forms.ModelForm):
     class Meta:
         model = Card
-        fields = ['front', 'back']
+        fields = ['front', 'back', 'front_desc', 'back_desc']
 
-
-# class StackForm(forms.ModelForm):
-#     tags = forms.ModelMultipleChoiceField(queryset=Tag.objects.all(), required=False, widget=forms.CheckboxSelectMultiple)
-
-#     class Meta:
-#         model = Stack
-#         fields = ['name', 'tags']
-
-#     def save(self, commit=True):
-#         stack = super().save(commit=False)
-#         if commit:
-#             stack.save()
-#             self.save_m2m()  # Save tags
-#         return stack
 
 class StackForm(forms.ModelForm):
     tags = forms.ModelMultipleChoiceField(

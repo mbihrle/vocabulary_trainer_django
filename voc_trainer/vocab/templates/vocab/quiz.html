@@ -44,6 +44,8 @@
                                             {% endif %}
                                         </div>
                                     {% endif %}
+                                    <p>Example Question: <br/> <strong>{{ request.session.question_desc }}</strong></p>
+                                    <p>Example Solution: <br/> <strong>{{ request.session.solution_desc }}</strong></p>
                                 {% endif %}
                                 <div class="buttons">
                                     {% if request.session.quiz_status == 'question' %}

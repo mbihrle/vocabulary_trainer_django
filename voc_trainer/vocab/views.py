@@ -143,7 +143,6 @@ def create_stack(request):
 
 
 @login_required
-
 def edit_stack(request, stack_id):
     stack = get_object_or_404(Stack, id=stack_id)
     assigned_tags = StackTag.objects.filter(stack=stack)
@@ -259,7 +258,7 @@ class DeleteCardView(LoginRequiredMixin, DeleteView):
 
 class EditCardView(UpdateView):
     model = Card
-    fields = ['front', 'back']  # Adjust fields according to your model
+    fields = ['front', 'back', 'front_desc', 'back_desc']  # Adjust fields according to your model
     template_name = 'vocab/edit_card.html'
 
     def get_success_url(self):
@@ -364,6 +363,8 @@ class QuizView(LoginRequiredMixin, FormView):
         # Determine the correct answer depending on quiz mode (normal or inverse)
         correct_answer = card.front if self.request.session.get(
             'inverse_quiz') else card.back
+        correct_answer_desc = card.front_desc if self.request.session.get(
+            'inverse_quiz') else card.back_desc
 
         if correct_answer.lower() == answer.lower():
             self.request.session['result'] = 'Correct!'
@@ -382,7 +383,10 @@ class QuizView(LoginRequiredMixin, FormView):
         self.request.session['quiz_status'] = 'answer'
         self.request.session['user_input'] = answer
         self.request.session['question'] = card.back if self.request.session.get('inverse_quiz') else card.front
+        self.request.session['question_desc'] = card.back_desc if self.request.session.get('inverse_quiz') else card.front_desc
         self.request.session['solution'] = correct_answer
+        self.request.session['solution_desc'] = correct_answer_desc
+        
 
         asked_card_ids = self.request.session.get(
             f'asked_card_ids_{self.stack.id}', [])
