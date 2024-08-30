@@ -1,5 +1,5 @@
 from django import forms
-from .models import Card, Stack, Tag, StackTag
+from .models import Card, Stack, Tag, StackTag, Tag
 
 class CardForm(forms.ModelForm):
     class Meta:
@@ -34,3 +34,14 @@ class AnswerForm(forms.Form):
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Type your answer here...'})
     )
     card_id = forms.IntegerField(widget=forms.HiddenInput())
+
+
+
+
+class TagForm(forms.ModelForm):
+    class Meta:
+        model = Tag
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+        }

@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views  # function based
-from .views import StartQuizView, QuizView, DeleteStackView, DeleteCardView, MoveCardsView, EditCardView
+from .views import StartQuizView, QuizView, DeleteStackView, DeleteCardView, MoveCardsView, EditCardView, TagListView, TagCreateView, TagUpdateView, TagDeleteView
 
 app_name = 'vocab'
 
@@ -28,4 +28,13 @@ urlpatterns = [
     path('stack/<int:stack_id>/add_tag/',
          views.add_tag_to_stack, name='add_tag_to_stack'),
      path('stack/tag/remove/<int:stack_tag_id>/', views.remove_stack_tag, name='remove_stack_tag'),
-]
+
+     path('tags/', TagListView.as_view(), name='tags'),
+     path('tags/create/', TagCreateView.as_view(), name='add_tag'),
+     path('tags/<int:pk>/edit/', TagUpdateView.as_view(), name='edit_tag'),
+     path('tags/<int:pk>/delete/', TagDeleteView.as_view(), name='delete_tag'),
+     #  path('tags/', views.tags_view, name='tags'),
+     #  path('tags/add/', views.add_tag, name='add_tag'),
+     #  path('tags/edit/<int:tag_id>/', views.edit_tag, name='edit_tag'),
+     #  path('tags/delete/<int:tag_id>/', views.delete_tag, name='delete_tag'),
+     ]

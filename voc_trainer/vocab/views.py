@@ -8,7 +8,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .forms import CardForm, AnswerForm
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
-from django.views.generic.edit import FormView, UpdateView, DeleteView
+from django.views.generic import FormView, ListView, CreateView, UpdateView, DeleteView
 from django.views import View
 from .models import Card, Stack
 from .forms import AnswerForm, CardForm, StackForm, TagForm
@@ -102,19 +102,6 @@ def stack_detail(request, stack_id):
     return render(request, 'vocab/stack_detail.html', context)
 
 
-# @login_required
-# def create_stack(request):
-#     if request.method == 'POST':
-#         form = StackForm(request.POST)
-#         if form.is_valid():
-#             stack = form.save(commit=False)
-#             stack.user = request.user
-#             stack.save()
-#             return redirect('vocab:home')
-#     else:
-#         form = StackForm()
-
-#     return render(request, 'vocab/create_stack.html', {'form': form})
 
 @login_required
 def create_stack(request):
@@ -130,16 +117,7 @@ def create_stack(request):
         form = StackForm()
     return render(request, 'vocab/create_stack.html', {'form': form})
 
-# class RenameStackView(UpdateView):
-#     model = Stack
-#     form_class = StackForm
-#     template_name = 'vocab/rename_stack.html'
 
-#     def get_success_url(self):
-#         return reverse_lazy('vocab:stack_detail', kwargs={'stack_id': self.object.id})
-
-#     def get_queryset(self):
-#         return Stack.objects.filter(user=self.request.user)
 
 
 @login_required
@@ -188,37 +166,7 @@ def edit_stack(request, stack_id):
 
     return render(request, 'vocab/edit_stack.html', context)
 
-   
-# def edit_stack(request, stack_id):
-#     stack = get_object_or_404(Stack, id=stack_id)
-
-#     # Initialize forms
-#     stack_form = StackForm(instance=stack)
-#     tag_form = TagForm()
-
-#     if request.method == 'POST':
-#         if 'save_stack' in request.POST:  # Handle stack form submission
-#             stack_form = StackForm(request.POST, instance=stack)
-#             if stack_form.is_valid():
-#                 stack_form.save()
-#                 return redirect('vocab:stack_detail', stack_id=stack.id)
-
-#         elif 'add_tag' in request.POST:  # Handle tag form submission
-#             tag_form = TagForm(request.POST)
-#             if tag_form.is_valid():
-#                 new_tag = tag_form.save()
-#                 stack.tags.add(new_tag)  # Add the new tag to the stack
-#                 return redirect('vocab:edit_stack', stack_id=stack.id)
-
-#     context = {
-#         'form': stack_form,
-#         'tag_form': tag_form,
-#         'stack_id': stack_id,
-#         'stack': stack,
-#     }
-#     return render(request, 'vocab/edit_stack.html', context)
-
-
+ 
 
 class DeleteStackView(LoginRequiredMixin, DeleteView):
     model = Stack
@@ -454,6 +402,79 @@ def remove_stack_tag(request, stack_tag_id):
     stack_tag.delete()
     messages.success(request, 'Tag removed from stack successfully!')
     return redirect(reverse('vocab:edit_stack', args=[stack_tag.stack.id]))
+
+
+class TagListView(LoginRequiredMixin, ListView):
+    model = Tag
+    template_name = 'vocab/tags.html'
+    context_object_name = 'tags'
+
+    def get_queryset(self):
+        return Tag.objects.filter(user=self.request.user)
+
+class TagCreateView(LoginRequiredMixin, CreateView):
+    model = Tag
+    form_class = TagForm
+    template_name = 'vocab/edit_tag.html'
+    success_url = reverse_lazy('vocab:tags')
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
+class TagUpdateView(LoginRequiredMixin, UpdateView):
+    model = Tag
+    form_class = TagForm
+    template_name = 'vocab/edit_tag.html'
+    success_url = reverse_lazy('vocab:tags')
+
+class TagDeleteView(LoginRequiredMixin, DeleteView):
+    model = Tag
+    template_name = 'vocab/delete_tag.html'
+    success_url = reverse_lazy('vocab:tags')
+
+    def get_queryset(self):
+        return Tag.objects.filter(user=self.request.user)
+
+
+# @login_required
+# def tags_view(request):
+#     tags = Tag.objects.filter(user=request.user)
+#     form = TagForm()
+#     return render(request, 'vocab/tags.html', {'tags': tags, 'form': form})
+
+# @login_required
+# def add_tag(request):
+#     if request.method == 'POST':
+#         form = TagForm(request.POST)
+#         if form.is_valid():
+#             tag = form.save(commit=False)
+#             tag.user = request.user
+#             tag.save()
+#             return redirect('vocab:tags')
+
+# @login_required
+# def edit_tag(request, tag_id):
+#     print(f"tag_id:{tag_id}")
+#     tag = get_object_or_404(Tag, id=tag_id, user=request.user)
+#     if request.method == 'POST':
+#         print('POst')
+#         form = TagForm(request.POST, instance=tag)
+#         if form.is_valid():
+#             form.save()
+#             return redirect('vocab:tags')
+#     else:
+#         print('else')
+#         form = TagForm(instance=tag)
+#     return render(request, 'vocab/edit_tag.html', {'form': form})
+
+# @login_required
+# def delete_tag(request, tag_id):
+#     tag = get_object_or_404(Tag, id=tag_id, user=request.user)
+#     if request.method == 'POST':
+#         tag.delete()
+#         return redirect('vocab:tags')
+
 
 
 
