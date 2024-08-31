@@ -11,6 +11,7 @@ from django.urls import reverse_lazy
 from django.views.generic import FormView, ListView, CreateView, UpdateView, DeleteView
 from django.views import View
 from .models import Card, Stack
+from django.db.models import Q, OuterRef, Subquery
 from .forms import AnswerForm, CardForm, StackForm, TagForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
@@ -33,10 +34,21 @@ def random_direction(request):
 @login_required
 def home(request):
     query = request.GET.get('q')
+    # if query:
+    #     stacks = Stack.objects.filter(name__icontains=query, user=request.user)
     if query:
-        stacks = Stack.objects.filter(name__icontains=query, user=request.user)
+        stacks = Stack.objects.filter(
+            Q(name__icontains=query, user=request.user) |
+            Q(stacktag__tag__name__icontains=query, user=request.user)
+        ).distinct()
     else:
         stacks = Stack.objects.filter(user=request.user)
+
+
+    # Subquery to get the date of the last quiz of the first vocabulary (card) in each stack
+    last_quiz_subquery = Card.objects.filter(stack=OuterRef('pk')).order_by('created_at').values('last_quiz_timestamp')[:1]
+    # # Annotate stacks with the last quiz date
+    stacks = stacks.annotate(last_quiz_date=Subquery(last_quiz_subquery))
 
     context = {
         'stacks': stacks,

@@ -2,57 +2,80 @@
 
 {% block content %}
 
+<section class="container">
 
-<div class="container mt-5">
-    <h1>My Stacks</h1>
-
-    <a href="{% url 'vocab:tags' %}" class="btn btn-outline-primary">Manage Tags</a>
-
-
-    <!-- Search Form -->
-    <form method="GET" action="{% url 'vocab:home' %}" class="mb-4">
-        <div class="input-group">
-            <input type="text" name="q" class="form-control" placeholder="Search for a stack..." value="{{ request.GET.q }}">
-            <div class="input-group-append">
-                <button class="btn btn-primary" type="submit">Search</button>
-            </div>
-        </div>
-    </form>
-    {% if stacks %}
-    <div class="row">
-        {% for stack in stacks %}
-        <div class="col-md-4">
-            <div class="card mb-4 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">{{ stack.name }}</h5>
-                    <!-- Display the tags under the stack name -->
-                    <p>
-                        <strong>Tags:</strong>
-                        {% for tag in stack.tags.all %}
-                            <span class="badge bg-secondary">{{ tag.name }}</span>
-                        {% empty %}
-                            <span>No tags assigned</span>
-                        {% endfor %}
-                    </p>
-                    <p class="card-text">
-                        <small class="text-muted">
-                            Created on {{ stack.created_at|date:"F j, Y, g:i" }}
-                        </small>
-                    </p>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <a href="{% url 'vocab:stack_detail' stack.id %}" class="btn btn-primary btn-sm">View Stack</a>
-                        <a href="{% url 'vocab:start_quiz' stack.id %}" class="btn btn-success btn-sm">Start Quiz</a>
-                        <a href="{% url 'vocab:start_quiz' stack.id %}?inverse_quiz=true" class="btn btn-warning btn-sm">Start Quiz Inverse</a>
+    <div class="container mt-0">
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <div class="card mt-4 border-0 shadow-lg p-3 mb-5 bg-body rounded">
+                    <div class="card-body">
+                        <h2 class="card-title">My Stacks</h2>
+                        
+                        <!-- Search Form -->
+                        <form method="GET" action="{% url 'vocab:home' %}" class="mb-4">
+                            <div class="input-group">
+                                <input type="text" name="q" class="form-control" placeholder="Search for a stacks or tags..." value="{{ request.GET.q }}">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary" type="submit">Search</button>
+                                </div>
+                            </div>
+                        </form>
+                       <div>
+                            <a href="{% url 'vocab:create_stack' %}" class="btn btn-outline-success">Create New Stack</a>
+                            <a href="{% url 'vocab:tags' %}" class="btn btn-outline-primary float-end">Manage Tags</a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        {% endfor %}
+    </div>       
+
+    <div class="container mt-5">
+        {% if stacks %}
+        <div class="row">
+            {% for stack in stacks %}
+            <div class="col-md-4">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body">
+                        <a href="{% url 'vocab:stack_detail' stack.id %}" class=""><h5 class="card-title">{{ stack.name }}</h5></a>
+                        {% comment %} <h5 class="card-title">{{ stack.name }}</h5> {% endcomment %}
+                        <!-- Display the tags under the stack name -->
+                        <p class="card-text">
+                                <strong>Tags:</strong>
+                                {% for stack_tag in stack.stacktag_set.all %}
+                                    <span class="badge bg-info text-dark">{{ stack_tag.tag.name }}</span>
+                                {% empty %}
+                                    <span>No tags assigned</span>
+                                {% endfor %}
+                        </p>
+                        {% comment %} <p class="card-text"> {% endcomment %}
+                            <small class="text-muted">
+                                Created on {{ stack.created_at|date:"F j, Y, g:i" }}
+                            </small>
+                        {% comment %} <p class="card-text"> {% endcomment %}
+                            <small class="text-muted">
+                                {% if stack.last_quiz_date %}
+                                    <p>Last Quiz: {{ stack.last_quiz_date }}</p>
+                                {% else %}
+                                    <p>No quizzes taken yet.</p>
+                                {% endif %}
+                            </small>
+                        {% comment %} </p> {% endcomment %}
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'vocab:stack_detail' stack.id %}" class="btn btn-primary btn-sm">View Stack</a>
+                            <a href="{% url 'vocab:start_quiz' stack.id %}" class="btn btn-success btn-sm">Start Quiz</a>
+                            <a href="{% url 'vocab:start_quiz' stack.id %}?inverse_quiz=true" class="btn btn-warning btn-sm">Start Quiz Inverse</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+            <p>No stacks found.</p>
+        {% endif %}
+        {% comment %} <a href="{% url 'vocab:create_stack' %}" class="btn btn-outline-primary mt-3">Create New Stack</a> {% endcomment %}
     </div>
-    {% else %}
-        <p>No stacks found.</p>
-    {% endif %}
-    <a href="{% url 'vocab:create_stack' %}" class="btn btn-outline-primary mt-3">Create New Stack</a>
-</div>
+</section>
 
 {% endblock %}
