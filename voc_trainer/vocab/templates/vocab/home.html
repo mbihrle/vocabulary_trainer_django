@@ -22,7 +22,7 @@
                         </form>
                        <div>
                             <a href="{% url 'vocab:create_stack' %}" class="btn btn-outline-success">Create New Stack</a>
-                            <a href="{% url 'vocab:tags' %}" class="btn btn-outline-primary float-end">Manage Tags</a>
+                            <a href="{% url 'vocab:tags' %}" class="btn btn-outline-primary float-end">Manage All Tags</a>
                         </div>
                     </div>
                 </div>
@@ -38,7 +38,6 @@
                 <div class="card mb-4 shadow-sm">
                     <div class="card-body">
                         <a href="{% url 'vocab:stack_detail' stack.id %}" class=""><h5 class="card-title">{{ stack.name }}</h5></a>
-                        {% comment %} <h5 class="card-title">{{ stack.name }}</h5> {% endcomment %}
                         <!-- Display the tags under the stack name -->
                         <p class="card-text">
                                 <strong>Tags:</strong>
@@ -48,11 +47,9 @@
                                     <span>No tags assigned</span>
                                 {% endfor %}
                         </p>
-                        {% comment %} <p class="card-text"> {% endcomment %}
                             <small class="text-muted">
                                 Created on {{ stack.created_at|date:"F j, Y, g:i" }}
                             </small>
-                        {% comment %} <p class="card-text"> {% endcomment %}
                             <small class="text-muted">
                                 {% if stack.last_quiz_date %}
                                     <p>Last Quiz: {{ stack.last_quiz_date }}</p>
@@ -60,9 +57,9 @@
                                     <p>No quizzes taken yet.</p>
                                 {% endif %}
                             </small>
-                        {% comment %} </p> {% endcomment %}
                         <div class="d-flex justify-content-between align-items-center">
-                            <a href="{% url 'vocab:stack_detail' stack.id %}" class="btn btn-primary btn-sm">View Stack</a>
+                            <a href="{% url 'vocab:add_card' stack.id %}" class="btn btn-primary btn-sm">Add Cards</a>
+                            {% comment %} <a href="{% url 'vocab:stack_detail' stack.id %}" class="btn btn-primary btn-sm">Stack Details</a> {% endcomment %}
                             <a href="{% url 'vocab:start_quiz' stack.id %}" class="btn btn-success btn-sm">Start Quiz</a>
                             <a href="{% url 'vocab:start_quiz' stack.id %}?inverse_quiz=true" class="btn btn-warning btn-sm">Start Quiz Inverse</a>
                         </div>
@@ -74,7 +71,6 @@
         {% else %}
             <p>No stacks found.</p>
         {% endif %}
-        {% comment %} <a href="{% url 'vocab:create_stack' %}" class="btn btn-outline-primary mt-3">Create New Stack</a> {% endcomment %}
     </div>
 </section>
 

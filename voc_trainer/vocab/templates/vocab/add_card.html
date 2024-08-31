@@ -1,69 +1,9 @@
 {% extends 'profiles/base.html' %}
 
 {% block content %}
-<div class="container mt-5">
-        <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <h2 class="card-title">Add a New Card</h2>
-            <form method="post">
-                {% csrf_token %}
-                <div class="form-group">
-                    {% comment %} {{ form.front.label_tag }}
-                    {{ form.front }}  {% endcomment %}
-                    <div class="form-group mt-3">
-                        {{ form.front.label_tag }}
-                        <input
-                            type="text"
-                            name="front"
-                            class="form-control"
-                            maxlength="150"
-                            id="id_front"
-                            required
-                        />
-                    {% if form.front.errors %}
-                        <div class="text-danger">
-                            {% for error in form.front.errors %}
-                                {{ error }}<br>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-                
-                <div class="form-group mt-3">
-                    {% comment %} {{ form.back.label_tag }}
-                    {{ form.back }} {% endcomment %}
-                    <div class="form-group mt-3">
-                        {{ form.back.label_tag }}
-                        <input
-                            type="text"
-                            name="back"
-                            class="form-control"
-                            maxlength="150"
-                            id="id_back"
-                            required
-                        />
+<section class="container mt-5"> 
+    {% include "vocab/components/add_card_form.html" %}
+    {% comment %} {% include "vocab/components/stack_cards_form.html" %} {% endcomment %}
+</section>
 
-                    {% if form.back.errors %}
-                        <div class="text-danger">
-                            {% for error in form.back.errors %}
-                                {{ error }}<br>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-                
-                <button type="submit" class="btn btn-primary mt-3">Add Card</button>
-            </form>
-        </div>
-    </div>
-</div>
 {% endblock %}
-
-
-    <h1>Add a new card</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Add Card</button>
-    </form>
-

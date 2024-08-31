@@ -1,14 +1,19 @@
-{% extends 'profiles/base.html' %}
-
-
-{% block content %}
-<section class="container mt-5"> 
-      <div class="container">       
+     <!-- Add New Card -->
+    <div class="container">       
         <div class="row justify-content-center">
             <div class="col-md-12">
                 <div class="card my-1 border-0 shadow-lg p-3 bg-body rounded">
                     <div class="card-body">
-                        <h2 class="card-title">Edit Card</h2>
+                        <h2 class="card-title">Add a New Card</h2>
+                        <!-- Display Success Messages -->
+                        {% if messages %}
+                            <div class="alert alert-success" role="alert">
+                                {% for message in messages %}
+                                    {{ message }}
+                                {% endfor %}
+                            <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endif %}
                         <form method="post">
                             {% csrf_token %}
                             <div class="form-group">
@@ -16,7 +21,6 @@
                                 <input
                                     type="text"
                                     name="front"
-                                    value="{{form.front.value}}"
                                     class="form-control"
                                     maxlength="150"
                                     id="id_front"
@@ -26,7 +30,6 @@
                                 <input
                                     type="text"
                                     name="back"
-                                    value="{{form.back.value}}"
                                     class="form-control"
                                     maxlength="150"
                                     id="id_back"
@@ -38,7 +41,6 @@
                                 <input
                                     type="text"
                                     name="front_desc"
-                                    value="{{form.front_desc.value}}"
                                     class="form-control"
                                     maxlength="255"
                                     id="id_front_desc"
@@ -47,7 +49,6 @@
                                 <input
                                     type="text"
                                     name="back_desc"
-                                    value="{{form.back_desc.value}}"
                                     class="form-control"
                                     maxlength="255"
                                     id="id_back_desc"
@@ -71,30 +72,22 @@
                                 {% endif %}
                             </div>
                             <button type="submit" class="btn btn-primary my-3">Add Card</button>
+                            <a href="{% url 'vocab:home' %}" class="btn btn-secondary">&#060; Back</a>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</section>
 
-{% endblock %}
-
-<div class="container mt-5">
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <h2 class="card-title">Edit Card</h2>
-            <form method="post">
-                {% csrf_token %}
-                {{ form.as_p }}
-                {{ form.value }}
-                <button type="submit" class="btn btn-primary">Save Changes</button>
-                {{stack.id}}
-                hello
-                <a href="{% url 'vocab:stack_detail' stack.id %}" class="btn btn-secondary">Cancel</a>
-            </form>
-        </div>
-    </div>
-</div>
-
+    <script>
+    // Automatically close the alert after 5 seconds (5000 ms)
+    setTimeout(function() {
+        var alert = document.querySelector('.alert');
+        if (alert) {
+            alert.classList.remove('show');
+            alert.classList.add('fade');
+            setTimeout(function() { alert.remove(); }, 150); // remove from DOM after fade out
+        }
+    }, 3000);
+</script>

@@ -11,16 +11,12 @@ from django.urls import reverse_lazy
 from django.views.generic import FormView, ListView, CreateView, UpdateView, DeleteView
 from django.views import View
 from .models import Card, Stack
-from django.db.models import Q, OuterRef, Subquery
+from django.db.models import Q, Max, OuterRef, Subquery
 from .forms import AnswerForm, CardForm, StackForm, TagForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.urls import reverse
 import random
-
-# def random_direction(request):
-#     direction = random.choice(['links', 'rechts'])
-#     return render(request, 'vocab/direction.html', {'direction': direction})
 
 
 def random_direction(request):
@@ -55,10 +51,6 @@ def home(request):
     }
     return render(request, 'vocab/home.html', context)
 
-# @login_required
-# def home(request):
-#     stacks = Stack.objects.filter(user=request.user)
-#     return render(request, 'vocab/home.html', {'stacks': stacks})
 
 
 class StartQuizView(LoginRequiredMixin, View):
@@ -91,6 +83,14 @@ def stack_detail(request, stack_id):
     # tags = stack.tags.all()  # Get all tags associated with this stack
     stack_tags = StackTag.objects.filter(stack=stack)  # Get the StackTag relationships
 
+     # Subquery to get the last quiz date for this stack
+    last_quiz_subquery = Card.objects.filter(stack=OuterRef('pk')).order_by('-last_quiz_timestamp').values('last_quiz_timestamp')[:1]
+
+    # Annotate the stack with the last quiz date
+    stack = Stack.objects.filter(id=stack_id).annotate(last_quiz_date=Subquery(last_quiz_subquery)).first()
+
+    
+
     if request.method == 'POST':
         form = CardForm(request.POST)
         if form.is_valid():
@@ -98,7 +98,11 @@ def stack_detail(request, stack_id):
             card.stack = stack
             card.user = request.user
             card.save()
+
+            # Add a success message
+            messages.success(request, 'Card successfully added to the stack!')
             return redirect('vocab:stack_detail', stack_id=stack.id)
+
     else:
         form = CardForm()
 
@@ -107,10 +111,9 @@ def stack_detail(request, stack_id):
         'cards': cards, 
         'form': form, 
         'other_stacks': other_stacks,
-        'stack_tags': stack_tags
+        'stack_tags': stack_tags,
+        # 'last_quiz_date': last_quiz_date,
     }
-
-    # return render(request, 'vocab/stack_detail.html', {'stack': stack, 'cards': cards, 'form': form, 'other_stacks': other_stacks})
     return render(request, 'vocab/stack_detail.html', context)
 
 
@@ -189,18 +192,36 @@ class DeleteStackView(LoginRequiredMixin, DeleteView):
         return Stack.objects.filter(user=self.request.user)
 
 
-@login_required
-def add_card(request):
-    if request.method == 'POST':
-        form = CardForm(request.POST)
-        if form.is_valid():
-            card = form.save(commit=False)
-            card.user = request.user
-            card.save()
-            return redirect('vocab:add_card')
-    else:
-        form = CardForm()
-    return render(request, 'vocab/add_card.html', {'form': form})
+
+class AddCardView(LoginRequiredMixin, CreateView):
+    model = Card
+    form_class = CardForm
+    template_name = 'vocab/add_card.html'
+
+    def get_success_url(self):
+        # Redirect to the stack detail page after successfully adding a card
+        return reverse_lazy('vocab:add_card', kwargs={'stack_id': self.kwargs['stack_id']})
+
+    def form_valid(self, form):
+        # Get the stack from the URL
+        stack = get_object_or_404(Stack, id=self.kwargs['stack_id'], user=self.request.user)
+        # Assign the stack and the current user to the card before saving
+        form.instance.stack = stack
+        form.instance.user = self.request.user
+        # Save the form and add a success message
+        response = super().form_valid(form)
+        messages.success(self.request, 'Card added successfully!')
+        return response
+        # return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Include the stack in the context
+        context['stack'] = get_object_or_404(Stack, id=self.kwargs['stack_id'], user=self.request.user)
+        referer = self.request.META.get('HTTP_REFERER')  # Get the previous page URL
+        context['previous_page'] = referer  # Add it to the context
+        return context
+
 
 
 class DeleteCardView(LoginRequiredMixin, DeleteView):
@@ -399,7 +420,6 @@ def add_tag_to_stack(request, stack_id):
             StackTag.objects.get_or_create(stack=stack, tag=tag, added_by=request.user)
 
     return redirect('vocab:edit_stack', stack_id=stack.id)
-    # return redirect('vocab:stack_detail', stack_id=stack.id)
 
 
 def stacks_by_tag(request, tag_name):
@@ -423,6 +443,12 @@ class TagListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return Tag.objects.filter(user=self.request.user)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        referer = self.request.META.get('HTTP_REFERER')  # Get the previous page URL
+        context['previous_page'] = referer  # Add it to the context
+        return context
 
 class TagCreateView(LoginRequiredMixin, CreateView):
     model = Tag
