@@ -273,23 +273,68 @@ class MoveCardsView(View):
         return redirect('vocab:stack_detail', stack_id=current_stack.id)
 
 
+
+class QuizOptionsView(LoginRequiredMixin, View):
+    template_name = 'vocab/quiz_options.html'
+
+    def get(self, request, *args, **kwargs):
+        stack_id = kwargs.get('stack_id')
+        stack = get_object_or_404(Stack, id=stack_id, user=request.user)
+
+        # Get the first card as an example
+        first_card = Card.objects.filter(stack=stack).first()
+
+        context = {
+            'stack': stack,
+            'first_card': first_card
+        }
+        return render(request, self.template_name, context)
+
 class StartQuizView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         stack_id = kwargs.get('stack_id')
         stack = get_object_or_404(Stack, id=stack_id, user=request.user)
 
-        # Check for 'inverse_quiz' in the query parameters
-        if 'inverse_quiz' in request.GET:
-            print('inverse get')
-            self.request.session['inverse_quiz'] = True
-        else:
-            self.request.session['inverse_quiz'] = False
-
-        # Initialize other session variables as needed
+        self.request.session['inverse_quiz'] = False
         self.request.session['quiz_status'] = 'start'
+        # Set the session to start a normal quiz
+        # request.session['quiz_type'] = 'normal'
+        request.session['stack_id'] = stack.id
+        print('start Quiz')
 
-        # Redirect to the quiz page
-        return redirect('vocab:quiz', stack_id=stack.id)
+        return redirect('vocab:quiz' , stack_id=stack.id)
+
+class StartInverseQuizView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        stack_id = kwargs.get('stack_id')
+        stack = get_object_or_404(Stack, id=stack_id, user=request.user)
+
+        self.request.session['inverse_quiz'] = True
+        self.request.session['quiz_status'] = 'start'
+        # Set the session to start an inverse quiz
+        # request.session['quiz_type'] = 'inverse'
+        request.session['stack_id'] = stack.id
+        print('inverse Quiz')
+        return redirect('vocab:quiz' , stack_id=stack.id)
+
+
+# class StartQuizView(LoginRequiredMixin, View):
+#     def get(self, request, *args, **kwargs):
+#         stack_id = kwargs.get('stack_id')
+#         stack = get_object_or_404(Stack, id=stack_id, user=request.user)
+
+#         # Check for 'inverse_quiz' in the query parameters
+#         if 'inverse_quiz' in request.GET:
+#             print('inverse get')
+#             self.request.session['inverse_quiz'] = True
+#         else:
+#             self.request.session['inverse_quiz'] = False
+
+#         # Initialize other session variables as needed
+#         self.request.session['quiz_status'] = 'start'
+
+#         # Redirect to the quiz page
+#         return redirect('vocab:quiz', stack_id=stack.id)
 
 
 class QuizView(LoginRequiredMixin, FormView):
@@ -407,6 +452,10 @@ class QuizView(LoginRequiredMixin, FormView):
                         'solution', 'user_input', 'quiz_status']
         for key in session_keys:
             self.request.session.pop(key, None)
+
+
+
+
 
 
 

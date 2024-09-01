@@ -1,0 +1,117 @@
+class QuizView(LoginRequiredMixin, FormView):
+    template_name = 'vocab/quiz.html'
+    form_class = AnswerForm
+    success_url = reverse_lazy('vocab:quiz')
+
+    def dispatch(self, request, *args, **kwargs):
+        self.stack = self.get_stack()
+        if not self.stack:
+            return redirect('vocab:home')
+        request.session['quiz_status'] = 'question'
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_stack(self):
+        stack_id = self.kwargs.get('stack_id')
+        if stack_id:
+            return get_object_or_404(Stack, id=stack_id, user=self.request.user)
+        return None
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        asked_card_ids = self.request.session.get(
+            f'asked_card_ids_{self.stack.id}', [])
+        total_cards = self.stack.cards.count()
+        correct_answers = self.request.session.get(
+            f'correct_answers_{self.stack.id}', 0)
+
+        if len(asked_card_ids) == total_cards:
+            context['quiz_finished'] = True
+            context['total_cards'] = total_cards
+            context['correct_answers'] = correct_answers
+        else:
+            card = self.get_random_card(exclude_ids=asked_card_ids)
+            context['card'] = card
+            context['card_question'] = card.back if self.request.session.get(
+                'inverse_quiz') else card.front
+            context['quiz_status'] = self.request.session.get(
+                'quiz_status', 'question')
+        context['stack'] = self.stack
+
+        return context
+
+    def get_random_card(self, exclude_ids):
+        return self.stack.cards.exclude(id__in=exclude_ids).order_by('?').first()
+
+    def form_valid(self, form):
+        card_id = form.cleaned_data.get('card_id')
+        answer = form.cleaned_data.get('answer')
+        card = get_object_or_404(Card, id=card_id, stack=self.stack)
+
+        # Determine the correct answer depending on quiz mode (normal or inverse)
+        correct_answer = card.front if self.request.session.get(
+            'inverse_quiz') else card.back
+        correct_answer_desc = card.front_desc if self.request.session.get(
+            'inverse_quiz') else card.back_desc
+
+        if correct_answer.lower() == answer.lower():
+            self.request.session['result'] = 'Correct!'
+            self.request.session[f'correct_answers_{self.stack.id}'] = self.request.session.get(
+                f'correct_answers_{self.stack.id}', 0) + 1
+            card.correct_answers += 1
+        else:
+            self.request.session['result'] = f"{correct_answer}"
+            card.incorrect_answers += 1
+
+        # Record the quiz result
+        card.quiz_results += '1' if correct_answer.lower() == answer.lower() else '0'
+        card.last_quiz_timestamp = timezone.now()
+        card.save()
+
+        self.request.session['quiz_status'] = 'answer'
+        self.request.session['user_input'] = answer
+        self.request.session['question'] = card.back if self.request.session.get('inverse_quiz') else card.front
+        self.request.session['question_desc'] = card.back_desc if self.request.session.get('inverse_quiz') else card.front_desc
+        self.request.session['solution'] = correct_answer
+        self.request.session['solution_desc'] = correct_answer_desc
+        
+
+        asked_card_ids = self.request.session.get(
+            f'asked_card_ids_{self.stack.id}', [])
+        asked_card_ids.append(card_id)
+        self.request.session[f'asked_card_ids_{self.stack.id}'] = asked_card_ids
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+        # Redirect to the quiz page
+        return redirect('vocab:quiz', stack_id=stack.id)
+
+    def post(self, request, *args, **kwargs):
+        if 'check' in request.POST:
+            self.request.session['quiz_status'] = 'answer'
+        elif 'next' in request.POST:
+            self.clear_session_data()
+            self.request.session['quiz_status'] = 'question'
+            return self.get(request, *args, **kwargs)
+        elif 'cancel' in request.POST or 'cancel' in request.POST:
+            self.clear_session_data()
+            self.request.session[f'asked_card_ids_{self.stack.id}'] = []
+            self.request.session[f'correct_answers_{self.stack.id}'] = 0
+            self.request.session['quiz_status'] = 'question'
+            return redirect('vocab:home')
+            return self.get(request, *args, **kwargs)
+        elif 'restart' in request.POST or 'cancel' in request.POST:
+            self.clear_session_data()
+            self.request.session[f'asked_card_ids_{self.stack.id}'] = []
+            self.request.session[f'correct_answers_{self.stack.id}'] = 0
+            self.request.session['quiz_status'] = 'question'
+            return self.get(request, *args, **kwargs)
+        return super().post(request, *args, **kwargs)
+
+    def clear_session_data(self):
+        session_keys = ['result', 'question',
+                        'solution', 'user_input', 'quiz_status']
+        for key in session_keys:
+            self.request.session.pop(key, None)
+
+
