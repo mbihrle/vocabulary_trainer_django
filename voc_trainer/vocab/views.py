@@ -126,11 +126,27 @@ def create_stack(request):
             stack = form.save(commit=False)
             stack.user = request.user
             stack.save()
-            form.save_m2m()  # Save the tags
+            
+            # Handle new tag
+            new_tag_name = request.POST.get('new_tag')
+            if new_tag_name:
+                new_tag, created = Tag.objects.get_or_create(name=new_tag_name, user=request.user)
+                StackTag.objects.create(stack=stack, tag=new_tag, added_by=request.user)
+            
+            # Handle existing tags
+            existing_tag_ids = request.POST.getlist('existing_tags')
+            for tag_id in existing_tag_ids:
+                tag = get_object_or_404(Tag, id=tag_id)
+                StackTag.objects.create(stack=stack, tag=tag, added_by=request.user)
+
             return redirect('vocab:home')
     else:
         form = StackForm()
-    return render(request, 'vocab/create_stack.html', {'form': form})
+    
+    # Fetch all existing tags to show in the form
+    tags = Tag.objects.all()    
+
+    return render(request, 'vocab/create_stack.html', {'form': form, 'tags': tags})
 
 
 
@@ -318,24 +334,6 @@ class StartInverseQuizView(LoginRequiredMixin, View):
         return redirect('vocab:quiz' , stack_id=stack.id)
 
 
-# class StartQuizView(LoginRequiredMixin, View):
-#     def get(self, request, *args, **kwargs):
-#         stack_id = kwargs.get('stack_id')
-#         stack = get_object_or_404(Stack, id=stack_id, user=request.user)
-
-#         # Check for 'inverse_quiz' in the query parameters
-#         if 'inverse_quiz' in request.GET:
-#             print('inverse get')
-#             self.request.session['inverse_quiz'] = True
-#         else:
-#             self.request.session['inverse_quiz'] = False
-
-#         # Initialize other session variables as needed
-#         self.request.session['quiz_status'] = 'start'
-
-#         # Redirect to the quiz page
-#         return redirect('vocab:quiz', stack_id=stack.id)
-
 
 class QuizView(LoginRequiredMixin, FormView):
     template_name = 'vocab/quiz.html'
@@ -422,8 +420,7 @@ class QuizView(LoginRequiredMixin, FormView):
 
         return self.render_to_response(self.get_context_data(form=form))
 
-        # Redirect to the quiz page
-        return redirect('vocab:quiz', stack_id=stack.id)
+
 
     def post(self, request, *args, **kwargs):
         if 'check' in request.POST:
