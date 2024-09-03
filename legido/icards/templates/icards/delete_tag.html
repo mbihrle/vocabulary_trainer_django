@@ -1,0 +1,15 @@
+{% extends 'profiles:base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Delete Tag</h1>
+    
+    <p>Are you sure you want to delete the tag "<strong>{{ tag.name }}</strong>"?</p>
+
+    <form method="post" action="{% url 'icards:delete_tag' tag.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, delete this tag</button>
+        <a href="{% url 'icards:tags' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

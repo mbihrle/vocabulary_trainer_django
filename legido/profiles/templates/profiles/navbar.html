@@ -1,0 +1,43 @@
+<nav class="navbar navbar-expand-lg bg-light">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{% url 'icards:home' %}">iCards</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="{% url 'icards:home' %}">Home</a>
+        </li>
+        {% comment %} <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="{% url 'icards:add_card' %}">Add Card</a>
+        </li> {% endcomment %}
+        {% comment %} <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="{% url 'icards:quiz' %}">Quiz</a>
+        </li> {% endcomment %}
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'icards:random_direction' %}">Zufallsgenerator</a>
+        </li>
+      </ul>
+      {% if user.is_authenticated %}
+      <li class="nav-item nav-link">
+        Welcome, {{ user.username }} 
+      </li>
+      <li class="nav-item nav-link">
+        <form action="{% url 'profiles:logout' %}" method="post" style="display:inline;">
+          {% csrf_token %}
+          <button class="btn btn-dark mx-2" type="submit">Logout</button>
+        </form>
+      </li>
+      {% else %}
+      
+        <li class="d-flex nav-item">
+          <a class="nav-link" href="{% url 'profiles:login' %}">Login</a> 
+          <span class="nav-link mx-2">|</span>
+          <a class="nav-link" href="{% url 'profiles:register' %}">Register</a>
+        </li>
+      {% endif %}
+
+    </div>
+  </div>
+</nav>

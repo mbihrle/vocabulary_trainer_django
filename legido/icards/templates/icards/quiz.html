@@ -1,0 +1,93 @@
+
+{% extends 'profiles/base.html' %}
+{% load static %}
+
+{% block content %}
+
+
+<section> 
+    <div class="container mt-5"> 
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card mt-4 border-0 shadow-lg p-3 mb-5 bg-body rounded"> 
+                    <div class="card-body">
+                        <h2 class=card-title>Quiz for {{ stack.name }}</h2>
+                        {% if quiz_finished and not request.session.result %}
+                            <p>The quiz is finished!</p>
+                            <p>You answered {{ correct_answers }} out of {{ total_cards }} cards correctly.</p>
+                            <form method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary" name="restart">Restart Quiz</button>
+                                <a href="{% url 'icards:home' %}" class="btn btn-secondary float-end">Home</a>
+                            </form>
+                        {% else %}
+                            <form method="post">
+                                {% csrf_token %}
+                                {% if request.session.quiz_status == 'question' %}
+                                     <p>Question: <br/><strong>{{ card_question }}</strong></p>
+                                    <input type="hidden" name="card_id" value="{{ card.id }}">
+                                    {{ form.answer }}
+                                {% elif request.session.quiz_status == 'answer' %}
+                                    <p>Question: <br/><strong>{{ request.session.question }}</strong></p>
+                                    <p>Your Input: <br/> <strong>{{ request.session.user_input }}</strong></p>
+                                    {% comment %} <p>Solution: <br/><strong>{{ request.session.solution }}</strong></p> {% endcomment %}
+                                    {% if request.session.result %}
+                                        <div class="mt-3">
+                                            {% if 'Correct!' in request.session.result %}
+                                                <div class="alert alert-success" role="alert">
+                                                    <strong>{{ request.session.result }}</strong><br/>
+                                                    <strong>{{ request.session.solution }}</strong>
+                                                </div>
+                                            {% else %}
+                                                <div class="alert alert-danger" role="alert">
+                                                    <strong>{{ request.session.result }}</strong><br/>
+                                                    <strong>{{ request.session.solution }}</strong>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                    <p>Example Question: <br/> <strong>{{ request.session.question_desc }}</strong></p>
+                                    <p>Example Solution: <br/> <strong>{{ request.session.solution_desc }}</strong></p>
+                                {% endif %}
+                                <div class="buttons">
+                                    {% if request.session.quiz_status == 'question' %}
+                                        <button type="submit" class="btn btn-primary mt-3" name="check">Check</button>
+                                    {% elif request.session.quiz_status == 'answer'%}
+                                        <button type="submit" class="btn btn-primary mt-3" name="next">Next</button>
+                                    {% endif %}
+                                    <button type="submit" class="btn btn-danger mt-3 float-end"name="cancel" class="cancel-btn">Abbrechen</button>            
+                                </div>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+      </div>
+ </div>
+</section>
+
+
+    <script>
+        // JavaScript to trigger "Next" button on Enter key press
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    // Check if we are in the answer state
+                    if (document.querySelector('button[name="next"]')) {
+                        event.preventDefault(); // Prevent default form submission
+                        document.querySelector('button[name="next"]').click(); // Trigger the Next button
+                    }
+                }
+            });
+        });
+
+            <!-- JavaScript to set focus on the input field -->
+
+        document.addEventListener("DOMContentLoaded", function() {
+            var answerInput = document.querySelector("input[name='answer']");
+            if (answerInput) {
+                answerInput.focus();
+            }
+        });
+    </script>
+{% endblock %}

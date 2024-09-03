@@ -1,0 +1,125 @@
+{% extends 'profiles/base.html' %}
+
+
+{% block content %}
+
+<head>
+    <style>
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: ">>"; /* Custom separator */
+        padding: 0.1 0.1rem; /* Space around the separator */
+        color: #6c757d; /* Color of the separator */
+    }
+    </style>
+</head>
+
+<section class="container my-3">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'icards:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'icards:stack_detail' stack.id %}">Stack Detail</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Edit Stack</li>
+        </ol>
+    </nav>
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <div class="card mb-2 border-0 shadow-lg p-3 bg-body rounded">
+                    <h2 class="card-title my-3">Edit Stack: {{ stack.name }}</h2>
+
+                    <!-- Tags -->
+                    <div class="d-flex flex-wrap">
+                        <p>Tags:  
+                            {% for stack_tag in assigned_tags %}
+                                <form method="post" action="{% url 'icards:remove_stack_tag' stack_tag.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" style="display: inline-block; border: none; background: none; padding: 0; margin-left: 5px;">
+                                        <span class="badge bg-info text-dark">{{ stack_tag.tag.name }}</span>
+                                    </button>
+                                </form>
+                            {% empty %}
+                                <span>No tags assigned</span>
+                            {% endfor %}
+                        </p>
+                    </div>
+
+                    <!-- Stack name and save stack -->
+                    <form method="post" action="{% url 'icards:edit_stack' stack.id %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            {{ form.name.label_tag }}
+                            <input
+                                type="text"
+                                name="name"
+                                value="{{ form.name.value|default:stack.name }}"  
+                                class="form-control"
+                                maxlength="150"
+                                id="id_name"
+                                required
+                            />
+                        </div>
+                        <button type="submit" name="save_changes" class="btn btn-primary my-3">Save Changes</button>
+                        <a href="{% url 'icards:stack_detail' stack.id %}" class="btn btn-secondary">&#060; Back</a>
+                    </form>           
+                </div>
+            </div>
+            <!-- Add existing Tag -->
+            <div class="row justify-content-center">
+                <div class="card mb-2 border-0 shadow-lg p-3 bg-body rounded">
+                    <h2 class="card-title my-3">Add Existing Tag</h2>
+                    <form method="post" action="{% url 'icards:edit_stack' stack.id %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="existing_tag">Select Tag to Add:</label>
+                            <select name="existing_tag" id="existing_tag" class="form-control">
+                                {% for tag in unassigned_tags %}
+                                    <option value="{{ tag.id }}">{{ tag.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" name="add_existing_tag" class="btn btn-primary my-3">Add Tag</button>
+                    </form>
+                </div>
+            </div>
+            <!-- Add new tag -->
+            <div class="row justify-content-center">
+                 <div class="card mb-2 border-0 shadow-lg p-3 bg-body rounded">
+                    <h2 class="card-title my-3">Add New Tag</h2>
+                    <form method="post" action="{% url 'icards:edit_stack' stack.id %}">
+                        {% csrf_token %}
+                                <div class="form-group">
+                                    {{ form.name.label_tag }}
+                                        <input
+                                            type="text"
+                                            name="name"
+                                            placeholder="Enter tag name" 
+                                            class="form-control"
+                                            maxlength="150"
+                                            id="id_name"
+                                            required
+                                        />
+                                </div>
+                        <button type="submit" name="new_tag" class="btn btn-primary my-3">Add New Tag</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Display Messages -->
+            {% if messages %}
+                <div class="mt-3">
+                    {% for message in messages %}
+                        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+</section>
+   
+{% endblock %}
+
+
+
+
+

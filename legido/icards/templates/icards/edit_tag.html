@@ -1,0 +1,33 @@
+{% extends 'profiles/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Edit Tag</h1>
+    
+    <!-- Display Messages -->
+    {% if messages %}
+        <div class="alert alert-info">
+            {% for message in messages %}
+                {{ message }}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Edit Tag Form -->
+    <div class="card">
+        <div class="card-body">
+        {% comment %} {% for item in form %}
+            {{ item }}
+        {% endfor %} {% endcomment %}
+            <form method="post" action="{% url 'icards:edit_tag' tag.id %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="id_name">Tag Name</label>
+                    <input type="text" name="name" class="form-control" id="id_name" value="{{ form.name.value }}" maxlength="100" required>
+                </div>
+                <button type="submit" class="btn btn-primary mt-2">Save Changes</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

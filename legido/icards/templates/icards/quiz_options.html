@@ -1,0 +1,51 @@
+{% extends 'profiles/base.html' %}
+
+{% block content %}
+
+<head>
+    <style>
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: ">>"; /* Custom separator */
+        padding: 0.1 0.1rem; /* Space around the separator */
+        color: #6c757d; /* Color of the separator */
+    }
+    </style>
+</head>
+
+<section class="container my-3"> 
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'icards:home' %}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Quiz Options</li>
+        </ol>
+    </nav>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card mb-1 border-0 shadow-lg p-3 bg-body rounded">   
+                <div class="card-body">
+                    <div class="card-title">
+                        <h1>Choose Quiz Type</h1>
+                        <h3>Stack: {{ stack.name }}</h3>
+                    </div>
+                    {% if first_card %}
+                            <div class="card-text">Stack Example:
+                                <p><strong>Front:</strong> {{ first_card.front }} - <strong>Back:</strong> {{ first_card.back }}</p>
+                                <p>Start Quiz to get asked for the backside</p>
+                                <p>Start Inverse Quiz to get asked for the frontside</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p>No cards available in this stack.</p>
+                    {% endif %}
+                    <div class="mb-3">
+                    <a href="{% url 'icards:start_quiz' stack.id %}" class="btn btn-success">Start Quiz</a>
+                    <a href="{% url 'icards:start_inverse_quiz' stack.id %}" class="btn btn-danger">Start Inverse Quiz</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+         
+
+{% endblock %}

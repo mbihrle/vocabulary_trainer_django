@@ -1,0 +1,13 @@
+    {% extends 'profiles/base.html' %}
+
+    {% block content %}
+    
+    Hello {{user}}
+    {% if user.is_authenticated %}
+        <h1>Welcome to Your icardsulary Trainer</h1>
+        
+    {% else %}
+        <h1>Access Restricted</h1>
+        <p>You must <a href="{% url 'profiles:login' %}">log in</a> to use the icardsulary trainer.</p>
+    {% endif %} 
+    {% endblock %}

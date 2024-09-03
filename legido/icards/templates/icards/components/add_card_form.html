@@ -1,0 +1,93 @@
+     <!-- Add New Card -->
+    <div class="container">       
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <div class="card my-1 border-0 shadow-lg p-3 bg-body rounded">
+                    <div class="card-body">
+                        <h2 class="card-title">Add a New Card</h2>
+                        <!-- Display Success Messages -->
+                        {% if messages %}
+                            <div class="alert alert-success" role="alert">
+                                {% for message in messages %}
+                                    {{ message }}
+                                {% endfor %}
+                            <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endif %}
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                {{ form.front.label_tag }}
+                                <input
+                                    type="text"
+                                    name="front"
+                                    class="form-control"
+                                    maxlength="150"
+                                    id="id_front"
+                                    required
+                                />
+                                {{ form.back.label_tag }}
+                                <input
+                                    type="text"
+                                    name="back"
+                                    class="form-control"
+                                    maxlength="150"
+                                    id="id_back"
+                                    required
+                                />
+                            </div>
+                            <div class="form-group">
+                                {{ form.front_desc.label_tag }}
+                                <input
+                                    type="text"
+                                    name="front_desc"
+                                    class="form-control"
+                                    maxlength="255"
+                                    id="id_front_desc"
+                                />
+                                {{ form.back_desc.label_tag }}
+                                <input
+                                    type="text"
+                                    name="back_desc"
+                                    class="form-control"
+                                    maxlength="255"
+                                    id="id_back_desc"
+                                />
+                            </div>
+                            <div class="form-group">
+                                {% if form.front.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.front.errors %}
+                                            {{ error }}<br>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}                 
+                            
+                                {% if form.back.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.back.errors %}
+                                            {{ error }}<br>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <button type="submit" class="btn btn-primary my-3">Add Card</button>
+                            <a href="{% url 'icards:home' %}" class="btn btn-secondary">&#060; Back</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // Automatically close the alert after 5 seconds (5000 ms)
+    setTimeout(function() {
+        var alert = document.querySelector('.alert');
+        if (alert) {
+            alert.classList.remove('show');
+            alert.classList.add('fade');
+            setTimeout(function() { alert.remove(); }, 150); // remove from DOM after fade out
+        }
+    }, 3000);
+</script>

@@ -1,0 +1,13 @@
+.scrollable-card-list {
+    max-height: 300px; /* Set the max height to make the content scrollable */
+    overflow-y: auto;  /* Enable vertical scrolling */
+    border: 1px solid #ddd; /* Optional: Add a border for better visual separation */
+    padding-right: 10px; /* Optional: Add padding to avoid scrollbar overlapping the text */
+}
+
+.list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+

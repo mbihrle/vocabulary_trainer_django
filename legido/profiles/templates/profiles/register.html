@@ -1,0 +1,98 @@
+{% extends './base.html' %}
+
+{% block content %}
+<div class="container">
+    <section>
+        <div class="container mt-5">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card mt-4 border-0 shadow-lg p-3 mb-5 bg-body rounded">
+                        <div class="card-body">
+                            <h2 class="card-title">Register</h2>
+                            <form method="post">
+                                {% csrf_token %}
+                                
+                                <!-- Username Field -->
+                                <div class="form-group mt-3">
+                                    {{ form.username.label_tag }}
+                                    <input
+                                        type="text"
+                                        name="username"
+                                        class="form-control"
+                                        maxlength="150"
+                                        id="id_username"
+                                        required
+                                    />
+                                    
+                                    {% if form.username.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.username.errors %}
+                                                {{ error }}<br>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">{{ form.username.help_text }}</small>
+                                </div>
+
+                                <!-- Password1 Field -->
+                                <div class="form-group mt-3">
+                                    {{ form.password1.label_tag }}
+                                    <input
+                                        type="password"
+                                        name="password1"
+                                        class="form-control"
+                                        id="id_password1"
+                                        required
+                                    />
+                                    
+                                    {% if form.password1.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.password1.errors %}
+                                                {{ error }}<br>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">{{ form.password1.help_text }}</small>
+                                </div>
+
+                                <!-- Password2 Field -->
+                                <div class="form-group mt-3">
+                                    {{ form.password2.label_tag }}
+                                    <input
+                                        type="password"
+                                        name="password2"
+                                        class="form-control"
+                                        id="id_password2"
+                                        required
+                                    />
+                                    {% if form.password2.errors %}
+                                        <div class="text-danger">
+                                        pw2
+                                            {% for error in form.password2.errors %}
+                                                {{ error }}<br>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">{{ form.password2.help_text }}</small>
+                                </div>
+
+                                <!-- Submit Button -->
+                                <button type="submit" class="btn btn-primary mt-3">Register</button>
+
+                                <!-- Non-Field Errors (e.g., password mismatch) -->
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger my-2" role="alert">
+                                    {% for error in form.non_field_errors %}
+                                        {{ error }}<br>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

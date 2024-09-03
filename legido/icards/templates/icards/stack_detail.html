@@ -1,0 +1,75 @@
+{% extends 'profiles/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<head>
+    <style>
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: ">>"; /* Custom separator */
+        padding: 0.1 0.1rem; /* Space around the separator */
+        color: #6c757d; /* Color of the separator */
+    }
+    </style>
+</head>
+
+<section class="container my-3"> 
+    <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'icards:home' %}">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Stack Detail</li>
+    </ol>
+    </nav>
+        <div class="row justify-content-center">
+         <div class="col-md-12">
+            <div class="card mb-1 border-0 shadow-lg p-3 bg-body rounded">
+                <div class="card-body">
+                    <a href="{% url 'icards:edit_stack' stack.id %}"><h1 class="card-title">{{ stack.name }}</h1></a>
+                    <!-- Display the tags -->
+                    <p>Tags:
+                        {% for tag in stack_tags %}
+                            <span class="badge bg-info text-dark">{{ tag.tag.name }}</span>
+                        {% empty %}
+                            <span>No tags assigned</span>
+                        {% endfor %}
+                    </p>
+                    <a href="{% url 'icards:tags' %}" class="btn btn-outline-primary btn-sm">Manage All Tags</a>
+                    <!-- Stack Info -->
+                    <div class="card-text my-2">
+                        <small class="text-muted">Created on {{ stack.created_at|date:"F j, Y, g:i a" }}</small>
+                         <small class="text-muted">
+                                {% if stack.last_quiz_date %}
+                                    <p>Last Quiz: {{ stack.last_quiz_date }}</p>
+                                {% else %}
+                                    <p>No quizzes taken yet.</p>
+                                {% endif %}
+                            </small>
+                    </div>
+
+                    {% comment %} <p>Last Quiz Date: {% if stack.last_quiz_date %}{{ stack.last_quiz_date|date:"Y-m-d H:i" }}{% else %}No quizzes taken{% endif %}</p> {% endcomment %}
+                    <p class="card-text"><strong>Total Cards: {{ stack.cards.count }}</strong></p>
+                    <!-- Stack Buttons -->
+                    <div class="mb-3">
+                        <a href="{% url 'icards:home' %}" class="btn btn-secondary">&#060; Back</a>
+                        {% comment %} <a href="{% url 'icards:edit_stack' stack.id %}" class="btn btn-warning">Edit Stack</a> {% endcomment %}
+                        <a href="{% url 'icards:delete_stack' stack.id %}" class="btn btn-danger float-end">Delete Stack</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Add New Card -->
+
+         {% include "icards/components/add_card_form.html" %}
+
+        <!-- Add Stack Cards -->
+            {% include "icards/components/stack_cards_form.html" %}
+        <div class="">
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}
+
+
+

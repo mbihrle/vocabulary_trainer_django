@@ -1,0 +1,82 @@
+{% extends 'profiles/base.html' %}
+
+{% block content %}
+
+<section class="container">
+
+    <div class="container mt-0">
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <div class="card mt-4 border-0 shadow-lg p-3 mb-5 bg-body rounded">
+                    <div class="card-body">
+                        <h2 class="card-title">My Stacks</h2>
+                        
+                        <!-- Search Form -->
+                        <form method="GET" action="{% url 'icards:home' %}" class="mb-4">
+                            <div class="input-group">
+                                <input type="text" name="q" class="form-control" placeholder="Search for a stacks or tags..." value="{{ request.GET.q }}">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary" type="submit">Search</button>
+                                </div>
+                            </div>
+                        </form>
+                       <div>
+                            <a href="{% url 'icards:create_stack' %}" class="btn btn-outline-success">Create New Stack</a>
+                            <a href="{% url 'icards:tags' %}" class="btn btn-outline-primary float-end">Manage All Tags</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>       
+
+    <div class="container mt-5">
+        {% if stacks %}
+        <div class="row">
+            {% for stack in stacks %}
+            <div class="col-md-4">
+                  <div class="card mb-1 border-0 shadow-lg p-3 bg-body rounded">
+                    <div class="card-body">
+                        <a href="{% url 'icards:stack_detail' stack.id %}" class=""><h5 class="card-title">{{ stack.name }}</h5></a>
+                        <!-- Display the tags under the stack name -->
+                        <p class="card-text">
+                                <strong>Tags:</strong>
+                                {% for stack_tag in stack.stacktag_set.all %}
+                                    <span class="badge bg-info text-dark">{{ stack_tag.tag.name }}</span>
+                                {% empty %}
+                                    <span>No tags assigned</span>
+                                {% endfor %}
+                        </p>
+                        <p class="card-text">
+                            <small class="text-muted">Number of Cards: {{ stack.card_count }}</small> <br/>
+                            <small class="text-muted">
+                                Created on {{ stack.created_at|date:"F j, Y, g:i" }}
+                            </small> <br/>
+                            <small class="text-muted">
+                                {% if stack.last_quiz_date %}
+                                    Last Quiz: {{ stack.last_quiz_date }}
+                                {% else %}
+                                    No quizzes taken yet.
+                                {% endif %}
+                            </small>
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'icards:add_card' stack.id %}" class="btn btn-success btn-sm">Add Cards</a>
+                            {% comment %} <a href="{% url 'icards:stack_detail' stack.id %}" class="btn btn-primary btn-sm">Stack Details</a> {% endcomment %}
+                            {% comment %} <a href="{% url 'icards:start_quiz' stack.id %}" class="btn btn-success btn-sm">Start Quiz</a> {% endcomment %}
+                            <a href="{% url 'icards:quiz_options' stack.id %}" class="btn btn-primary btn-sm">Start Quiz</a>
+                            {% comment %} <a href="{% url 'icards:start_quiz' stack.id %}" class="btn btn-success btn-sm">Start Quiz</a> {% endcomment %}
+                            {% comment %} <a href="{% url 'icards:start_quiz' stack.id %}?inverse_quiz=true" class="btn btn-warning btn-sm">Start Quiz Inverse</a> {% endcomment %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+            <p>No stacks found.</p>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}

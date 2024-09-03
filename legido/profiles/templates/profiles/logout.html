@@ -1,0 +1,22 @@
+{% extends 'profiles/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-sm mb-4">
+        <div class="card-body text-center">
+            <h2 class="card-title">Logout</h2>
+            <p class="card-text">You have successfully logged out.</p>
+            <a href="{% url 'profiles:login' %}" class="btn btn-primary mt-3" >Login again?</a>
+            <a href="{% url 'icards:home' %}" class="btn btn-secondary mt-3">Go to Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% comment %} {% extends './base.html' %}
+
+{% block content %}
+    <h1>Logout</h1>
+    <p>You have successfully logged out. <br/><a href="{% url 'profiles:login' %}">Login again?</a><br/><a href="{% url 'icards:home' %}">Weiter</a></p>
+{% endblock %} {% endcomment %}
